@@ -1,0 +1,25 @@
+<h3>
+  <a href="{%url changeset_view changeset.pk%}">
+    Changeset created at {{changeset.created_date}}
+  </a>
+</h3>
+<div>
+  This changeset contains the following modified models:
+  {%for record in changeset.recordsets.all%}
+    {%if forloop.first%}
+      <ul>
+    {%endif%}
+        <li>
+    {%if record.content.get_absolute_url%}
+          <a href="{{record.content.get_absolute_url}}">
+    {%endif%}
+            {{record.content}}
+    {%if record.content.get_absolute_url%}
+          </a>
+    {%endif%}
+        </li>
+    {%if forloop.last%}
+      </ul>
+    {%endif%}
+  {%endfor%}
+</div>

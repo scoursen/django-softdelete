@@ -1,0 +1,15 @@
+{%extends "softdelete/base.html"%}
+
+{%block content%}
+  <h2>ChangeSets</h2>
+    {%for object in object_list%}
+      {%if forloop.first%}
+        <div id="list_accordion">
+      {%endif%}
+      {%include "softdelete/stubs/changeset_detail.html" with changeset=object%}
+      {%if forloop.last%}
+        </div>
+      {%endif%}
+    {%endfor%}
+
+{%endblock%}

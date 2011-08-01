@@ -1,0 +1,8 @@
+{%extends "softdelete/base.html"%}
+
+{%block content%}
+{%include "softdelete/stubs/changeset_detail.html" with changeset=object%}
+<form method="POST" action="{%url changeset_undelete object.pk%}">
+  <input type="submit" name="action" value="Undelete" />
+</form>
+{%endblock%}
