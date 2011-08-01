@@ -28,4 +28,14 @@ INSTALLED_APPS = (
     'softdelete',
 )
 
+Central to the ability to undelete a soft-deleted model is the concept of changesets.  When you
+soft-delete an object, any objects referencing it via a ForeignKey, ManyToManyField, or OneToOneField will
+also be soft-deleted.  This mimics the traditional CASCADE behavior of a SQL DELETE.
 
+When the soft-delete is performed, the system makes a ChangeSet object which tracks all affected objects of
+this delete request.  Later, when an undelete is requested, this ChangeSet is referenced to do a cascading 
+undelete.
+
+If you are undeleting an object that was part of a ChangeSet, that entire ChangeSet is undeleted.  
+
+Once undeleted, the ChangeSet object is removed from the underlying database with a regular ("hard") delete.
