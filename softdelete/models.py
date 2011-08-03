@@ -13,7 +13,7 @@ from softdelete.signals import *
 
 def _determine_change_set(obj, create=True):
     try:
-        qs = RecordSet.objects.filter(content_type=ContentType.objects.get_for_model(obj),
+        qs = SoftDeleteRecord.objects.filter(content_type=ContentType.objects.get_for_model(obj),
                                       object_id=obj.pk).latest('created_date').changeset
         logging.debug("Found changeset via latest recordset")
     except:
@@ -41,7 +41,7 @@ class SoftDeleteQuerySet(query.QuerySet):
                              using=using)
         cs = kwargs.get('changeset')
         for obj in self:
-            rs, c = RecordSet.objects.get_or_create(changeset=cs or _determine_change_set(obj),
+            rs, c = SoftDeleteRecord.objects.get_or_create(changeset=cs or _determine_change_set(obj),
                                                     content_type=ContentType.objects.get_for_model(obj),
                                                     object_id=obj.pk)
             obj.delete(using, *args, **kwargs)
@@ -119,7 +119,7 @@ class SoftDeleteObject(models.Model):
                              using=using)
         logging.debug('SOFT DELETING %s' % self)
         cs = kwargs.get('changeset') or _determine_change_set(self)
-        RecordSet.objects.get_or_create(changeset=cs,
+        SoftDeleteRecord.objects.get_or_create(changeset=cs,
                                         content_type=ContentType.objects.get_for_model(self),
                                         object_id=self.pk)                                        
         self.deleted = True
@@ -177,7 +177,7 @@ class ChangeSet(models.Model):
 
     content = property(get_content)
 
-class RecordSet(models.Model):
+class SoftDeleteRecord(models.Model):
     changeset = models.ForeignKey(ChangeSet, related_name='recordsets')
     created_date = models.DateTimeField(default=datetime.utcnow)
     content_type = models.ForeignKey(ContentType)
@@ -195,7 +195,7 @@ class RecordSet(models.Model):
         self.content._undelete(using)
 
     def __unicode__(self):
-        return u'RecordSet: (%s), (%s/%s), %s' % (self.content,
+        return u'SoftDeleteRecord: (%s), (%s/%s), %s' % (self.content,
                                                   self.content_type,
                                                   self.object_id,
                                                   self.changeset.created_date)

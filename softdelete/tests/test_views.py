@@ -47,13 +47,13 @@ class ViewTest(ViewBase):
 
     def test_undelete(self):
         self.cs_count = ChangeSet.objects.count()
-        self.rs_count = RecordSet.objects.count()
+        self.rs_count = SoftDeleteRecord.objects.count()
         self.t_count = TestModelOne.objects.count()
         self.tmo1.delete()
         self.assertEquals(self.t_count-1, TestModelOne.objects.count())
         self.assertEquals(0, self.tmo1.tmos.count())
         self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+11, RecordSet.objects.count())
+        self.assertEquals(self.rs_count+11, SoftDeleteRecord.objects.count())
         rv = self.client.get(reverse("changeset_undelete",
                                      args=(ChangeSet.objects.latest("created_date").pk,)))
         self.assertEquals(rv.status_code,200)
@@ -64,6 +64,6 @@ class ViewTest(ViewBase):
         rv = self.client.get(rv['Location'])
         self.assertEquals(rv.status_code, 200)
         self.assertEquals(self.cs_count, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count, RecordSet.objects.count())
+        self.assertEquals(self.rs_count, SoftDeleteRecord.objects.count())
         self.assertEquals(self.t_count, TestModelOne.objects.count())
         self.assertEquals(10, self.tmo1.tmos.count())
