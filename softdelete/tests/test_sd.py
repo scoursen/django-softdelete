@@ -2,8 +2,9 @@ from django.conf import settings
 from django.db.models import loading, query
 from django.core.management import call_command
 from django.test import TestCase, Client
+from django.contrib.auth.models import User
 from django.db import models
-from softdelete.tests.models import TestModelOne, TestModelTwo
+from softdelete.tests.models import TestModelOne, TestModelTwo, TestModelThree, TestModelThrough
 from softdelete.models import *
 from softdelete.signals import *
 import logging
@@ -18,6 +19,14 @@ class BaseTest(TestCase):
             else:
                 parent = self.tmo2
             TestModelTwo.objects.create(extra_int=x, tmo=parent)
+        for x in range(10):
+            if x % 2:
+                left_side = self.tmo1
+            else:
+                left_side = self.tmo2
+            for x in range(10):
+                t3 = TestModelThree.objects.create()
+                tmt = TestModelThrough.objects.create(tmo1=left_side, tmo3=t3)
 
 
 class InitialTest(BaseTest):
@@ -83,15 +92,30 @@ class DeleteTest(BaseTest):
         self._pretest()
         self.tmo1.delete()
         self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+6, SoftDeleteRecord.objects.count()) 
+        self.assertEquals(self.rs_count+106, SoftDeleteRecord.objects.count()) 
         self._posttest()
 
     def test_filter_delete(self):
         self._pretest()
         TestModelOne.objects.filter(pk=1).delete()
         self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+6, SoftDeleteRecord.objects.count())
+        self.assertEquals(self.rs_count+106, SoftDeleteRecord.objects.count())
         self._posttest()
+
+class AdminTest(BaseTest):
+    def test_admin(self):
+        client = Client()
+        u = User.objects.create(username='test-user', is_staff=True, is_superuser=True)
+        u.set_password('test')
+        u.save()
+        client.login(username='test-user', password='test')
+        tmo = client.get('/admin/tests/testmodelone/1/')
+        self.assertEquals(tmo.status_code, 200)
+        tmo = client.post('/admin/tests/testmodelone/1/',
+                          {'extra_bool': '1', 'deleted': '1'})
+        self.assertEquals(tmo.status_code, 302)
+        self.tmo1 = TestModelOne.objects.get(pk=self.tmo1.pk)
+        self.assertTrue(self.tmo1.deleted)
 
 class UndeleteTest(BaseTest):
     def pre_undelete(self, *args, **kwargs):
@@ -111,7 +135,7 @@ class UndeleteTest(BaseTest):
         self.rs_count = SoftDeleteRecord.objects.count()
         self.tmo1.delete()
         self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+6, SoftDeleteRecord.objects.count())
+        self.assertEquals(self.rs_count+106, SoftDeleteRecord.objects.count())
         self.tmo1 = TestModelOne.objects.get(pk=self.tmo1.pk)
         self.tmo2 = TestModelOne.objects.get(pk=self.tmo2.pk)
         self.assertTrue(self.tmo1.deleted)
@@ -128,7 +152,7 @@ class UndeleteTest(BaseTest):
 
         self.tmo1.delete()
         self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+6, SoftDeleteRecord.objects.count())
+        self.assertEquals(self.rs_count+106, SoftDeleteRecord.objects.count())
         self.tmo1 = TestModelOne.objects.get(pk=self.tmo1.pk)
         self.tmo2 = TestModelOne.objects.get(pk=self.tmo2.pk)
         self.assertTrue(self.tmo1.deleted)
