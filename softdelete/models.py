@@ -112,7 +112,10 @@ class SoftDeleteObject(models.Model):
         try:
             getattr(self, rel).all().delete(changeset=changeset)
         except:
-            getattr(self, rel).all().delete()
+            try:
+                getattr(self, rel).all().delete()
+            except:
+                getattr(self, rel).__class__.objects.all().delete()
 
     def delete(self, using=settings.DATABASES['default'], *args, **kwargs):
         models.signals.pre_delete.send(sender=self.__class__, 
