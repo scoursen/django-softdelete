@@ -33,11 +33,14 @@ class SoftDeleteObjectAdmin(admin.ModelAdmin):
 class SoftDeleteObjectInline(admin.TabularInline):
     exclude = ('deleted_flag',)
 
-    def __init__(self, instance, site, **kwargs):
-        super(SoftDeleteObjectInline, self).__init__(instance, site)
+    def change_view(self, request, object_id, extra_context=None):
+        instance = self.queryset(request).get(pk=object_id)
         if instance.deleted:
             self.extra = 0
             self.max_num = 0
+        super(SoftDeleteObjectInline, self).change_view(request,
+                                                        object_id,
+                                                        extra_context)
 
     def queryset(self, request):
         qs = self.model._default_manager.all_with_deleted()
