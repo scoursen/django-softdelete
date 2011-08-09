@@ -92,7 +92,10 @@ class SoftDeleteObject(models.Model):
     objects = SoftDeleteManager()
     class Meta:
         abstract = True
-
+        permissions = (
+            ('can_undelete', 'Can undelete this object'),
+            )
+        
     def __init__(self, *args, **kwargs):
         super(SoftDeleteObject, self).__init__(*args, **kwargs)
         self.__dirty = False
@@ -191,11 +194,7 @@ class ChangeSet(models.Model):
         logging.debug("FINISHED CHANGESET UNDELETE: %s" % self)
 
     def __unicode__(self):
-        import StringIO
-        sio = StringIO.StringIO()
-        sio.write(u'ChangeSet: %s' % (self.created_date))
-        [sio.write(u'\n\t%s' % x) for x in self.soft_delete_records.all()]
-        return sio.getvalue()
+        return 'Changeset: %s, %s' % (self.created_date, self.record)
 
     content = property(get_content, set_content)
 

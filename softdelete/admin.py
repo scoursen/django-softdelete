@@ -1,3 +1,5 @@
+from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import admin
 from django.db import models
 from softdelete.models import *
@@ -28,10 +30,14 @@ class SoftDeleteObjectAdmin(admin.ModelAdmin):
         return qs
 
 
-        
-
 class SoftDeleteObjectInline(admin.TabularInline):
     exclude = ('deleted_flag',)
+
+    def __init__(self, instance, site, **kwargs):
+        super(SoftDeleteObjectInline, self).__init__(instance, site)
+        if instance.deleted:
+            self.extra = 0
+            self.max_num = 0
 
     def queryset(self, request):
         qs = self.model._default_manager.all_with_deleted()
@@ -40,19 +46,47 @@ class SoftDeleteObjectInline(admin.TabularInline):
             qs = qs.order_by(*ordering)
         return qs
 
-    def clean(self):
-        logging.info("SoftDeleteObjectInline.clean")
-        return super(SoftDeleteObjectInline, self).clean()
-
 class SoftDeleteRecordInline(admin.TabularInline):
     model = SoftDeleteRecord
+    max_num = 0
     exclude = ('content_type', 'object_id',)
     readonly_fields = ('content',)
 
+class SoftDeleteRecordAdmin(admin.ModelAdmin):
+    model = SoftDeleteRecord
+    form = SoftDeleteRecordAdminForm
+
+    def change_view(self, request, object_id, extra_context=None):
+        rv = super(SoftDeleteRecordAdmin, self).change_view(request,
+                                                     object_id,
+                                                     extra_context)
+        if request.POST.has_key('undelete'):
+            obj = SoftDeleteRecord.objects.get(pk=object_id)
+            obj.undelete()
+            return HttpResponseRedirect('../')
+        return rv
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
 class ChangeSetAdmin(admin.ModelAdmin):
     model = ChangeSet
+    form = ChangeSetAdminForm
     inlines = (SoftDeleteRecordInline,)
 
-admin.site.register(SoftDeleteRecord)
+    def change_view(self, request, object_id, extra_context=None):
+        rv = super(ChangeSetAdmin, self).change_view(request,
+                                                     object_id,
+                                                     extra_context)
+        if request.POST.has_key('undelete'):
+            obj = ChangeSet.objects.get(pk=object_id)
+            obj.undelete()
+            return HttpResponseRedirect('../')
+        return rv
+        
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+admin.site.register(SoftDeleteRecord, SoftDeleteRecordAdmin)
 admin.site.register(ChangeSet, ChangeSetAdmin)
 
