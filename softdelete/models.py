@@ -32,8 +32,9 @@ def _determine_change_set(obj, create=True):
     return qs
 
 class SoftDeleteQuerySet(query.QuerySet):
-
-    def get(self, *args, **kwargs):
+    # cpbotha: temporarily disabled. What is this for? The double return at the
+    # end is also suspicious.
+    def get2(self, *args, **kwargs):
         ms = models.Manager()
         ms.model = self.model
         return ms.get(*args, **kwargs)
@@ -62,7 +63,7 @@ class SoftDeleteQuerySet(query.QuerySet):
 
 class SoftDeleteManager(models.Manager):
     def get_query_set(self):
-        qs = super(SoftDeleteManager,self).get_query_set().filter(deleted_flag=False)
+        qs = super(SoftDeleteManager,self).get_query_set().filter(deleted_at__isnull=1)
         qs.__class__ = SoftDeleteQuerySet
         return qs
 
@@ -72,7 +73,7 @@ class SoftDeleteManager(models.Manager):
         return qs
 
     def deleted_set(self):
-        qs = super(SoftDeleteManager, self).get_query_set().filter(deleted_flag=True)
+        qs = super(SoftDeleteManager, self).get_query_set().filter(deleted_at__isnull=0)
         qs.__class__ = SoftDeleteQuerySet
         return qs
 
@@ -88,7 +89,7 @@ class SoftDeleteManager(models.Manager):
         return qs
 
 class SoftDeleteObject(models.Model):
-    deleted_flag = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(blank=True, null=True, default=None)
     objects = SoftDeleteManager()
     class Meta:
         abstract = True
@@ -101,14 +102,17 @@ class SoftDeleteObject(models.Model):
         self.__dirty = False
 
     def get_deleted(self):
-        return self.deleted_flag
+        return self.deleted_at != None
 
+    # cpbotha:
+    # temporarily disabling this whilst changing to a DateTime instead of Boolean.
+    # nobody is actually calling this, is it really necessary?
     def set_deleted(self, d):
         if d != self.deleted_flag:
             self.__dirty = True
         self.deleted_flag = d
 
-    deleted = property(get_deleted, set_deleted)
+    deleted = property(get_deleted)
 
     def _do_delete(self, changeset, related):
         rel = related.get_accessor_name()
@@ -132,7 +136,7 @@ class SoftDeleteObject(models.Model):
         SoftDeleteRecord.objects.get_or_create(changeset=cs,
                                         content_type=ContentType.objects.get_for_model(self),
                                         object_id=self.pk)                                        
-        self.deleted_flag = True
+        self.deleted_at = datetime.today()
         self.save()
         for x in self._meta.get_all_related_objects():
             self._do_delete(cs, x)
@@ -150,7 +154,7 @@ class SoftDeleteObject(models.Model):
         pre_undelete.send(sender=self.__class__,
                           instance=self,
                           using=using)
-        self.deleted_flag = False
+        self.deleted_at = None
         self.save()
         post_undelete.send(sender=self.__class__,
                            instance=self,
