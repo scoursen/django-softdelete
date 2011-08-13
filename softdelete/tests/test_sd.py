@@ -87,6 +87,7 @@ class DeleteTest(BaseTest):
         self.assertTrue(self.post_delete_called)
         self.assertTrue(self.pre_soft_delete_called)
         self.assertTrue(self.post_soft_delete_called)
+        self.tmo1.undelete()
         
     def test_delete(self):
         self._pretest()
