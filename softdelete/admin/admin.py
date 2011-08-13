@@ -7,8 +7,7 @@ from softdelete.admin.forms import *
 import logging
 
 class SoftDeleteObjectInline(admin.TabularInline):
-#    form = SoftDeleteObjectAdminForm
-    exclude = ('deleted_flag',)
+    exclude = ('deleted_at',)
 
     def change_view(self, request, object_id, extra_context=None):
         instance = self.queryset(request).get(pk=object_id)
@@ -39,7 +38,6 @@ class SoftDeleteObjectAdmin(admin.ModelAdmin):
     soft_undelete.short_description = 'Undelete selected objects'
 
     def response_change(self, request, obj, *args, **kwargs):
-        logging.info("in SoftDeleteObjectAdmin.response_change: %s" % self)
         if request.POST.has_key('undelete'):
             return HttpResponseRedirect('../')
         return super(SoftDeleteObjectAdmin, self).response_change(request, obj, *args, **kwargs)
@@ -85,7 +83,6 @@ class ChangeSetAdmin(admin.ModelAdmin):
     inlines = (SoftDeleteRecordInline,)
 
     def response_change(self, request, obj, *args, **kwargs):
-        logging.info("response_change:")
         if request.POST.has_key('undelete'):
             obj.undelete()
             return HttpResponseRedirect('../')

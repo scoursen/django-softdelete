@@ -8,23 +8,19 @@ class SoftDeleteObjectAdminForm(ModelForm):
     
     class Meta:
         model = SoftDeleteObject
-        exclude = ('deleted_flag',)
+        exclude = ('deleted_at',)
 
     def __init__(self, *args, **kwargs):
         super(SoftDeleteObjectAdminForm, self).__init__(*args, **kwargs)
         instance = kwargs.get('instance')
         if instance:
-            self.initial['deleted'] = instance.deleted_flag
+            self.initial['deleted'] = instance.deleted
 
     def clean(self, *args, **kwargs):
-        logging.info("in SoftDeleteObjectAdminForm.clean: %s, %s" % (args, kwargs))
         cleaned_data = super(SoftDeleteObjectAdminForm, self).clean(*args, **kwargs)
-        logging.info("self.data.keys(): %s" % ( self.data.keys()))
         if self.data.has_key('undelete'):
             self.instance.deleted = False
             cleaned_data['deleted'] = False
-            logging.info('undelete %s' % self.instance)
-        logging.info("cleaned_data: %s" % cleaned_data)
         return cleaned_data
 
     def save(self, commit=True, *args, **kwargs):
