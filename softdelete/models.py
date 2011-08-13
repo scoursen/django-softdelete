@@ -105,12 +105,15 @@ class SoftDeleteObject(models.Model):
         return self.deleted_at != None
 
     def set_deleted(self, d):
-        """Called via the admin interface (if user checks the "deleted" checkox)"::
-        if d != self.deleted_flag:
+        """Called via the admin interface (if user checks the "deleted" checkox)"""
+        if d and not self.deleted_at:
             self.__dirty = True
-        self.deleted_at = datetime.utcnow()
+            self.deleted_at = datetime.utcnow()
+        elif not d and self.deleted_at:
+            self.__dirty = True
+            self.deleted_at = datetime.utcnow()
 
-    deleted = property(get_deleted)
+    deleted = property(get_deleted, set_deleted)
 
     def _do_delete(self, changeset, related):
         rel = related.get_accessor_name()
