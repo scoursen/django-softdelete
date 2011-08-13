@@ -104,13 +104,11 @@ class SoftDeleteObject(models.Model):
     def get_deleted(self):
         return self.deleted_at != None
 
-    # cpbotha:
-    # temporarily disabling this whilst changing to a DateTime instead of Boolean.
-    # nobody is actually calling this, is it really necessary?
     def set_deleted(self, d):
+        """Called via the admin interface (if user checks the "deleted" checkox)"::
         if d != self.deleted_flag:
             self.__dirty = True
-        self.deleted_flag = d
+        self.deleted_at = datetime.utcnow()
 
     deleted = property(get_deleted)
 
