@@ -9,14 +9,11 @@ import logging
 class SoftDeleteObjectInline(admin.TabularInline):
     exclude = ('deleted_at',)
 
-    def change_view(self, request, object_id, extra_context=None):
-        instance = self.queryset(request).get(pk=object_id)
-        if instance.deleted:
+    def __init__(self, parent, site, *args, **kwargs):
+        super(SoftDeleteObjectInline, self).__init__(parent, site, *args, **kwargs)
+        if parent.deleted:
             self.extra = 0
             self.max_num = 0
-        super(SoftDeleteObjectInline, self).change_view(request,
-                                                        object_id,
-                                                        extra_context)
 
     def queryset(self, request):
         qs = self.model._default_manager.all_with_deleted()
