@@ -111,7 +111,7 @@ class SoftDeleteObject(models.Model):
             self.deleted_at = datetime.utcnow()
         elif not d and self.deleted_at:
             self.__dirty = True
-            self.deleted_at = datetime.utcnow()
+            self.deleted_at = None
 
     deleted = property(get_deleted, set_deleted)
 
@@ -123,7 +123,10 @@ class SoftDeleteObject(models.Model):
             try:
                 getattr(self, rel).all().delete()
             except:
-                getattr(self, rel).__class__.objects.all().delete()
+                try:
+                    getattr(self, rel).__class__.objects.all().delete(changeset=changeset)
+                except:
+                    getattr(self, rel).__class__.objects.all().delete()
 
     def delete(self, using=settings.DATABASES['default'], *args, **kwargs):
         models.signals.pre_delete.send(sender=self.__class__, 
@@ -141,8 +144,8 @@ class SoftDeleteObject(models.Model):
         self.save()
         for x in self._meta.get_all_related_objects():
             self._do_delete(cs, x)
-        for x in self._meta.get_all_related_many_to_many_objects():
-            self._do_delete(cs, x)
+#       for x in self._meta.get_all_related_many_to_many_objects():
+#            self._do_delete(cs, x)
         logging.debug("FINISHED SOFT DELETING RELATED %s" % self)
         models.signals.post_delete.send(sender=self.__class__, 
                                         instance=self, 
