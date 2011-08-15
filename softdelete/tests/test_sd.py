@@ -93,14 +93,14 @@ class DeleteTest(BaseTest):
         self._pretest()
         self.tmo1.delete()
         self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+106, SoftDeleteRecord.objects.count()) 
+        self.assertEquals(self.rs_count+56, SoftDeleteRecord.objects.count()) 
         self._posttest()
 
     def test_filter_delete(self):
         self._pretest()
         TestModelOne.objects.filter(pk=1).delete()
         self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+106, SoftDeleteRecord.objects.count())
+        self.assertEquals(self.rs_count+56, SoftDeleteRecord.objects.count())
         self._posttest()
 
 class AdminTest(BaseTest):
@@ -136,7 +136,7 @@ class UndeleteTest(BaseTest):
         self.rs_count = SoftDeleteRecord.objects.count()
         self.tmo1.delete()
         self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+106, SoftDeleteRecord.objects.count())
+        self.assertEquals(self.rs_count+56, SoftDeleteRecord.objects.count())
         self.tmo1 = TestModelOne.objects.get(pk=self.tmo1.pk)
         self.tmo2 = TestModelOne.objects.get(pk=self.tmo2.pk)
         self.assertTrue(self.tmo1.deleted)
@@ -153,7 +153,7 @@ class UndeleteTest(BaseTest):
 
         self.tmo1.delete()
         self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+106, SoftDeleteRecord.objects.count())
+        self.assertEquals(self.rs_count+56, SoftDeleteRecord.objects.count())
         self.tmo1 = TestModelOne.objects.get(pk=self.tmo1.pk)
         self.tmo2 = TestModelOne.objects.get(pk=self.tmo2.pk)
         self.assertTrue(self.tmo1.deleted)
