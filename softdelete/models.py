@@ -6,6 +6,7 @@ from django.db.utils import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
+from django.contrib.auth.models import User, Group, Permission
 import hashlib
 from datetime import datetime
 import logging
@@ -32,14 +33,6 @@ def _determine_change_set(obj, create=True):
     return qs
 
 class SoftDeleteQuerySet(query.QuerySet):
-    # cpbotha: temporarily disabled. What is this for? The double return at the
-    # end is also suspicious.
-    def get2(self, *args, **kwargs):
-        ms = models.Manager()
-        ms.model = self.model
-        return ms.get(*args, **kwargs)
-        return self.model.objects.all_with_deleted().get(*args, **kwargs)
-
     def delete(self, using=settings.DATABASES['default'], *args, **kwargs):
         if not len(self):
             return
@@ -47,8 +40,8 @@ class SoftDeleteQuerySet(query.QuerySet):
         logging.debug("STARTING QUERYSET SOFT-DELETE: %s. %s" % (self, len(self)))
         for obj in self:
             rs, c = SoftDeleteRecord.objects.get_or_create(changeset=cs or _determine_change_set(obj),
-                                                    content_type=ContentType.objects.get_for_model(obj),
-                                                    object_id=obj.pk)
+                                                           content_type=ContentType.objects.get_for_model(obj),
+                                                           object_id=obj.pk)
             logging.debug(" -----  CALLING delete() on %s" % obj)
             obj.delete(using, *args, **kwargs)        
 
@@ -144,8 +137,6 @@ class SoftDeleteObject(models.Model):
         self.save()
         for x in self._meta.get_all_related_objects():
             self._do_delete(cs, x)
-#       for x in self._meta.get_all_related_many_to_many_objects():
-#            self._do_delete(cs, x)
         logging.debug("FINISHED SOFT DELETING RELATED %s" % self)
         models.signals.post_delete.send(sender=self.__class__, 
                                         instance=self, 
@@ -235,3 +226,20 @@ class SoftDeleteRecord(models.Model):
     content = property(get_content, set_content)
 
 
+def create_group():
+    gr, cr = Group.objects.get_or_create(name='Softdelete User')
+    if cr:
+        for model in ['ChangeSet', 'SoftDeleteRecord']:
+            ct = ContentType.objects.get(app_label="softdelete",
+                                         model=model.lower())
+            p, pc = Permission.objects.get_or_create(name="Can undelete a soft-deleted object",
+                                                     codename="can_undelete",
+                                                     content_type=ct)
+            for permission in ['add_%s' % model.lower(),
+                               'change_%s' % model.lower(),
+                               'delete_%s' % model.lower(),
+                               'can_undelete']:
+                for perm_obj in Permission.objects.filter(codename=permission):
+                    gr.permissions.add(perm_obj)
+        gr.save()
+    return gr

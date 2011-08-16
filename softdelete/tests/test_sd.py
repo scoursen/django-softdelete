@@ -27,6 +27,15 @@ class BaseTest(TestCase):
             for x in range(10):
                 t3 = TestModelThree.objects.create()
                 tmt = TestModelThrough.objects.create(tmo1=left_side, tmo3=t3)
+        self.user = User.objects.create_user(username='SoftdeleteUser',
+                                             password='SoftdeletePassword',
+                                             email='softdeleteuser@example.com')
+        gr = create_group()
+        self.user.groups.add(gr)
+        self.user.save()
+        self.unauthorized = User.objects.create_user(username='NonSoftdeleteUser',
+                                                     password='NonSoftdeletePassword',
+                                                     email='nonsoftdeleteuser@example.com')
 
 
 class InitialTest(BaseTest):
@@ -106,8 +115,10 @@ class DeleteTest(BaseTest):
 class AdminTest(BaseTest):
     def test_admin(self):
         client = Client()
-        u = User.objects.create(username='test-user', is_staff=True, is_superuser=True)
-        u.set_password('test')
+        u = User.objects.create_user(username='test-user', password='test',
+                                     email='test-user@example.com')
+        u.is_staff = True
+        u.is_superuser = True
         u.save()
         client.login(username='test-user', password='test')
         tmo = client.get('/admin/tests/testmodelone/1/')
@@ -117,6 +128,18 @@ class AdminTest(BaseTest):
         self.assertEquals(tmo.status_code, 302)
         self.tmo1 = TestModelOne.objects.get(pk=self.tmo1.pk)
         self.assertTrue(self.tmo1.deleted)
+
+class AuthorizationTest(BaseTest):
+    def test_permission_needed(self):
+        cl = Client()
+        cl.login(username='NonSoftdeleteUser',
+                 password='NonSoftdeletePassword')
+        rv = cl.get(reverse('changeset_list'))
+        self.assertEquals(rv.status_code, 302)
+        rv = cl.get(reverse('changeset_view', args=(1,)))
+        self.assertEquals(rv.status_code, 302)
+        rv = cl.get(reverse('changeset_undelete', args=(1,)))
+        self.assertEquals(rv.status_code, 302)
 
 class UndeleteTest(BaseTest):
     def pre_undelete(self, *args, **kwargs):
@@ -168,6 +191,15 @@ class UndeleteTest(BaseTest):
         self.assertTrue(self.pre_undelete_called)
         self.assertTrue(self.post_undelete_called)
 
-        
+class M2MTests(BaseTest):
+    def test_m2mdelete(self):
+        t3 = TestModelThree.objects.all()[0]
+        self.assertFalse(t3.deleted)
+        for x in t3.tmos.all():
+            self.assertFalse(x.deleted)
+        t3.delete()
+        for x in t3.tmos.all():
+            self.assertFalse(x.deleted)
+
 
 

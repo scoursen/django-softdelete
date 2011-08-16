@@ -60,6 +60,11 @@ class SoftDeleteRecordInline(admin.TabularInline):
 class SoftDeleteRecordAdmin(admin.ModelAdmin):
     model = SoftDeleteRecord
     form = SoftDeleteRecordAdminForm
+    actions = ['soft_undelete']
+
+    def soft_undelete(self, request, queryset):
+        [x.undelete() for x in queryset.all()]
+    soft_undelete.short_description = 'Undelete selected objects'
 
     def response_change(self, request, obj, *args, **kwargs):
         if request.POST.has_key('undelete'):
@@ -78,6 +83,11 @@ class ChangeSetAdmin(admin.ModelAdmin):
     model = ChangeSet
     form = ChangeSetAdminForm
     inlines = (SoftDeleteRecordInline,)
+    actions = ['soft_undelete']
+
+    def soft_undelete(self, request, queryset):
+        [x.undelete() for x in queryset.all()]
+    soft_undelete.short_description = 'Undelete selected objects'
 
     def response_change(self, request, obj, *args, **kwargs):
         if request.POST.has_key('undelete'):

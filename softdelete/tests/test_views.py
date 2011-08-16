@@ -12,7 +12,10 @@ import logging
 class ViewBase(TestCase):
     def setUp(self):
         u, c = User.objects.get_or_create(username="undelete_test")
+        u.is_active = True
         u.set_password("undelete_password")
+        gr = create_group()
+        u.groups.add(gr)
         u.save()
         self.tmo1 = TestModelOne.objects.create(extra_bool=True)
         for x in range(10):

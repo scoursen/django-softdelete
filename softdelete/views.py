@@ -4,7 +4,7 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.core.urlresolvers import reverse
 from django.core import serializers
 from django.contrib import auth
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import permission_required
 from django.forms.models import inlineformset_factory
 from django.views.generic import *
 from django.views.generic.base import TemplateResponseMixin, View
@@ -16,7 +16,7 @@ from softdelete.models import *
 import logging
 
 class ProtectedView(object):
-    @method_decorator(login_required)
+    @method_decorator(permission_required('softdelete.can_undelete'))
     def dispatch(self, *args, **kwargs):
         return super(ProtectedView, self).dispatch(*args, **kwargs)
 
@@ -26,21 +26,18 @@ class ProtectedView(object):
         return context
 
 class ChangeSetList(ProtectedView, ListView):
-#class ChangeSetList(ListView):
     model = ChangeSet
 
     def get_query_set(self):
         return model.objects.all()
 
 class ChangeSetDetail(ProtectedView, DetailView):
-#class ChangeSetDetail(DetailView):
     model = ChangeSet
 
     def get_object(self):
         return get_object_or_404(ChangeSet, pk=self.kwargs['changeset_pk'])
 
 class ChangeSetUpdate(ProtectedView, UpdateView):
-#class ChangeSetUpdate(UpdateView):
     model = ChangeSet
     form_class = ChangeSetForm
 
