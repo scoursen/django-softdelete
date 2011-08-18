@@ -15,7 +15,13 @@ class ViewBase(TestCase):
         u.is_active = True
         u.set_password("undelete_password")
         gr = create_group()
-        u.groups.add(gr)
+        if USE_SOFTDELETE_GROUP:
+            gr = Group.objects.get(name="Softdelete User")
+            u.groups.add(gr)
+            u.save()
+            gr.save()
+        else:
+            assign_permissions(u)
         u.save()
         self.tmo1 = TestModelOne.objects.create(extra_bool=True)
         for x in range(10):
@@ -26,6 +32,12 @@ class ViewBase(TestCase):
         self.tmo2.delete()
 
 class ViewTest(ViewBase):
+    def __init__(self, *args, **kwargs):
+        settings.USE_SOFTDELETE_GROUP = kwargs.get('USE_SOFTDELETE_GROUP', False)
+        if kwargs.has_key('USE_SOFTDELETE_GROUP'):
+            del kwargs['USE_SOFTDELETE_GROUP']
+        super(ViewTest, self).__init__(*args, **kwargs)
+
     def setUp(self):
         super(ViewTest, self).setUp()
         self.client = Client()
@@ -70,3 +82,7 @@ class ViewTest(ViewBase):
         self.assertEquals(self.rs_count, SoftDeleteRecord.objects.count())
         self.assertEquals(self.t_count, TestModelOne.objects.count())
         self.assertEquals(10, self.tmo1.tmos.count())
+
+class GroupViewTest(ViewTest):
+    def __init__(self, *args, **kwargs):
+        super(GroupViewTest, self).__init__(USE_SOFTDELETE_GROUP=True, *args, **kwargs)
