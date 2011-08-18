@@ -31,7 +31,13 @@ class BaseTest(TestCase):
                                              password='SoftdeletePassword',
                                              email='softdeleteuser@example.com')
         gr = create_group()
-        self.user.groups.add(gr)
+        if USE_SOFTDELETE_GROUP:
+            gr = Group.objects.get(name="Softdelete User")
+            self.user.groups.add(gr)
+            self.user.save()
+            gr.save()
+        else:
+            assign_permissions(self.user)
         self.user.save()
         self.unauthorized = User.objects.create_user(username='NonSoftdeleteUser',
                                                      password='NonSoftdeletePassword',
