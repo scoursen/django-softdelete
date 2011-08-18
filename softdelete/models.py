@@ -12,10 +12,15 @@ from datetime import datetime
 import logging
 from softdelete.signals import *
 
+try:
+    USE_SOFTDELETE_GROUP = settings.USE_SOFTDELETE_GROUP
+except:
+    USE_SOFTDELETE_GROUP = False
+
 def _determine_change_set(obj, create=True):
     try:
         qs = SoftDeleteRecord.objects.filter(content_type=ContentType.objects.get_for_model(obj),
-                                      object_id=obj.pk).latest('created_date').changeset
+                                             object_id=obj.pk).latest('created_date').changeset
         logging.debug("Found changeset via latest recordset")
     except:
         try:
@@ -131,8 +136,8 @@ class SoftDeleteObject(models.Model):
         logging.debug('SOFT DELETING type: %s, %s' % (type(self), self))
         cs = kwargs.get('changeset') or _determine_change_set(self)
         SoftDeleteRecord.objects.get_or_create(changeset=cs,
-                                        content_type=ContentType.objects.get_for_model(self),
-                                        object_id=self.pk)                                        
+                                               content_type=ContentType.objects.get_for_model(self),
+                                               object_id=self.pk)
         self.deleted_at = datetime.today()
         self.save()
         for x in self._meta.get_all_related_objects():
@@ -226,20 +231,29 @@ class SoftDeleteRecord(models.Model):
     content = property(get_content, set_content)
 
 
+def assign_permissions(user_or_group):
+    for model in ['ChangeSet', 'SoftDeleteRecord']:
+        ct = ContentType.objects.get(app_label="softdelete",
+                                     model=model.lower())
+        p, pc = Permission.objects.get_or_create(name="Can undelete a soft-deleted object",
+                                                 codename="can_undelete",
+                                                 content_type=ct)
+        permissions = [p]
+        for permission in ['add_%s' % model.lower(),
+                           'change_%s' % model.lower(),
+                           'delete_%s' % model.lower(),
+                           'can_undelete']:
+            for perm_obj in Permission.objects.filter(codename=permission):
+                permissions.append(perm_obj)
+        perm_list = getattr(user_or_group, 'permissions', 
+                            getattr(user_or_group, 'user_permissions'))
+        [perm_list.add(x) for x in permissions]
+        user_or_group.save()
+    return user_or_group
+
 def create_group():
-    gr, cr = Group.objects.get_or_create(name='Softdelete User')
-    if cr:
-        for model in ['ChangeSet', 'SoftDeleteRecord']:
-            ct = ContentType.objects.get(app_label="softdelete",
-                                         model=model.lower())
-            p, pc = Permission.objects.get_or_create(name="Can undelete a soft-deleted object",
-                                                     codename="can_undelete",
-                                                     content_type=ct)
-            for permission in ['add_%s' % model.lower(),
-                               'change_%s' % model.lower(),
-                               'delete_%s' % model.lower(),
-                               'can_undelete']:
-                for perm_obj in Permission.objects.filter(codename=permission):
-                    gr.permissions.add(perm_obj)
-        gr.save()
-    return gr
+    if USE_SOFTDELETE_GROUP:
+        gr, cr = Group.objects.get_or_create(name='Softdelete User')
+        if cr:
+            assign_permissions(gr)
+        return gr
