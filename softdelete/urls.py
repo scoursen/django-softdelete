@@ -4,12 +4,12 @@ from softdelete.views import *
 urlpatterns = patterns('softdelete.views',
                        url(r'^changeset/(?P<changeset_pk>\d+?)/undelete/$',
                            ChangeSetUpdate.as_view(),
-                           name="changeset_undelete"), 
+                           name="softdelete.changeset.undelete"), 
                        url(r'^changeset/(?P<changeset_pk>\d+?)/$',
                            ChangeSetDetail.as_view(),
-                           name="changeset_view"),
+                           name="softdelete.changeset.view"),
                        url(r'^changeset/$',
                            ChangeSetList.as_view(),
-                           name="changeset_list"),
+                           name="softdelete.changeset.list"),
                        )
 

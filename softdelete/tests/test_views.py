@@ -45,11 +45,11 @@ class ViewTest(ViewBase):
                           password="undelete_password")
 
     def test_authorization(self):
-        rv = self.client.get(reverse("changeset_list"))
+        rv = self.client.get(reverse("softdelete.changeset.list"))
         pk = ChangeSet.objects.latest('created_date').pk
-        for view_name in [reverse("changeset_list"),
-                          reverse("changeset_view", args=(pk,)),
-                          reverse("changeset_undelete", args=(pk,)),]:
+        for view_name in [reverse("softdelete.changeset.list"),
+                          reverse("softdelete.changeset.view", args=(pk,)),
+                          reverse("softdelete.changeset.undelete", args=(pk,)),]:
             cli2 = Client()
             rv = cli2.get(view_name)
             self.assertEquals(rv.status_code, 302)
@@ -69,10 +69,10 @@ class ViewTest(ViewBase):
         self.assertEquals(0, self.tmo1.tmos.count())
         self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
         self.assertEquals(self.rs_count+11, SoftDeleteRecord.objects.count())
-        rv = self.client.get(reverse("changeset_undelete",
+        rv = self.client.get(reverse("softdelete.changeset.undelete",
                                      args=(ChangeSet.objects.latest("created_date").pk,)))
         self.assertEquals(rv.status_code,200)
-        rv = self.client.post(reverse("changeset_undelete", 
+        rv = self.client.post(reverse("softdelete.changeset.undelete", 
                                      args=(ChangeSet.objects.latest("created_date").pk,)),
                              {'action': 'Undelete'})
         self.assertEquals(rv.status_code, 302)

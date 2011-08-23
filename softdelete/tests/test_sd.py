@@ -140,11 +140,11 @@ class AuthorizationTest(BaseTest):
         cl = Client()
         cl.login(username='NonSoftdeleteUser',
                  password='NonSoftdeletePassword')
-        rv = cl.get(reverse('changeset_list'))
+        rv = cl.get(reverse('softdelete.changeset.list'))
         self.assertEquals(rv.status_code, 302)
-        rv = cl.get(reverse('changeset_view', args=(1,)))
+        rv = cl.get(reverse('softdelete.changeset.view', args=(1,)))
         self.assertEquals(rv.status_code, 302)
-        rv = cl.get(reverse('changeset_undelete', args=(1,)))
+        rv = cl.get(reverse('softdelete.changeset.undelete', args=(1,)))
         self.assertEquals(rv.status_code, 302)
 
 class UndeleteTest(BaseTest):

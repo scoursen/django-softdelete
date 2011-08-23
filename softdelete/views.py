@@ -45,7 +45,7 @@ class ChangeSetUpdate(ProtectedView, UpdateView):
         return get_object_or_404(ChangeSet, pk=self.kwargs['changeset_pk'])
 
     def get_success_url(self):
-        return reverse('changeset_list')
+        return reverse('softdelete.changeset.list')
 
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
@@ -53,7 +53,7 @@ class ChangeSetUpdate(ProtectedView, UpdateView):
 
     def post(self, request, *args, **kwargs):
         if request.POST.get('action') != 'Undelete':
-            return HttpResponseRedirect(reverse('changeset_view',
+            return HttpResponseRedirect(reverse('softdelete.changeset.view',
                                                 args=(kwargs['changeset_pk'],)))
         self.get_object().undelete()
         return HttpResponseRedirect(self.get_success_url())
