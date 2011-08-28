@@ -4,7 +4,7 @@ from django.core.management import call_command
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.db import models
-from softdelete.tests.models import TestModelOne, TestModelTwo, TestModelThree, TestModelThrough
+from softdelete.test_softdelete_app.models import TestModelOne, TestModelTwo, TestModelThree, TestModelThrough
 from softdelete.models import *
 from softdelete.signals import *
 import logging
@@ -127,9 +127,9 @@ class AdminTest(BaseTest):
         u.is_superuser = True
         u.save()
         client.login(username='test-user', password='test')
-        tmo = client.get('/admin/tests/testmodelone/1/')
+        tmo = client.get('/admin/test_softdelete_app/testmodelone/1/')
         self.assertEquals(tmo.status_code, 200)
-        tmo = client.post('/admin/tests/testmodelone/1/',
+        tmo = client.post('/admin/test_softdelete_app/testmodelone/1/',
                           {'extra_bool': '1', 'deleted': '1'})
         self.assertEquals(tmo.status_code, 302)
         self.tmo1 = TestModelOne.objects.get(pk=self.tmo1.pk)

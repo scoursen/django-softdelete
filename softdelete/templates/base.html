@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <title>You should never see this</title>
+  </head>
+  <body>
+    <p>If you are seeing this, django-softdelete's base.html template is being
+found by the template renderer before your site's base.html.  You should
+place the app that has the desired base.html earlier in the INSTALLED_APPS
+into settings.py.
+    <p>You could also replace base.html in the
+&lt;path-to-django-softdelete&gt;/key/templates/base.html with other content.
+{%block content%}
+{%endblock%}
+  </body>
+</html>

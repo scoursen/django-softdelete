@@ -4,7 +4,7 @@ from django.core.management import call_command
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.db import models
-from softdelete.tests.models import TestModelOne, TestModelTwo
+from softdelete.test_softdelete_app.models import TestModelOne, TestModelTwo
 from softdelete.models import *
 from softdelete.signals import *
 import logging
