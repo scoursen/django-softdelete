@@ -126,29 +126,51 @@ class SoftDeleteObject(models.Model):
                 except:
                     getattr(self, rel).__class__.objects.all().delete()
 
-    def delete(self, using=settings.DATABASES['default'], *args, **kwargs):
-        models.signals.pre_delete.send(sender=self.__class__, 
-                                       instance=self, 
-                                       using=using)
-        pre_soft_delete.send(sender=self.__class__,
-                             instance=self,
-                             using=using)
-        logging.debug('SOFT DELETING type: %s, %s' % (type(self), self))
-        cs = kwargs.get('changeset') or _determine_change_set(self)
-        SoftDeleteRecord.objects.get_or_create(changeset=cs,
-                                               content_type=ContentType.objects.get_for_model(self),
-                                               object_id=self.pk)
-        self.deleted_at = datetime.today()
-        self.save()
-        for x in self._meta.get_all_related_objects():
-            self._do_delete(cs, x)
-        logging.debug("FINISHED SOFT DELETING RELATED %s" % self)
-        models.signals.post_delete.send(sender=self.__class__, 
-                                        instance=self, 
-                                        using=using)
-        post_soft_delete.send(sender=self.__class__,
-                              instance=self,
-                              using=using)
+    def delete(self, *args, **kwargs):
+        if self.deleted_at:
+            logging.debug("HARD DELETEING type %s, %s" % (type(self), self))
+            try:
+                cs = ChangeSet.objects.get(content_type=ContentType.objects.get_for_model(self),
+                                           objects_id=self.pk)
+                cs.delete()
+                super(SoftDeleteObject, self).delete(*args, **kwargs)
+            except:
+                try:    
+                    cs = kwargs.get('changeset') or _determine_change_set(self)
+                    rs = SoftDeleteRecord.objects.get(changeset=cs,
+                                                      content_type=ContentType.objects.get_for_model(self),
+                                                      object_id=self.pk)
+                    if rs.changeset.soft_delete_records.count() == 1:
+                        cs.delete()
+                    else:
+                        rs.delete()
+                    super(SoftDeleteObject, self).delete(*args, **kwargs)
+                except:
+                    pass
+        else:
+            using = kwargs.get('using', settings.DATABASES['default'])
+            models.signals.pre_delete.send(sender=self.__class__, 
+                                           instance=self, 
+                                           using=using)
+            pre_soft_delete.send(sender=self.__class__,
+                                 instance=self,
+                                 using=using)
+            logging.debug('SOFT DELETING type: %s, %s' % (type(self), self))
+            cs = kwargs.get('changeset') or _determine_change_set(self)
+            SoftDeleteRecord.objects.get_or_create(changeset=cs,
+                                                   content_type=ContentType.objects.get_for_model(self),
+                                                   object_id=self.pk)
+            self.deleted_at = datetime.today()
+            self.save()
+            for x in self._meta.get_all_related_objects():
+                self._do_delete(cs, x)
+            logging.debug("FINISHED SOFT DELETING RELATED %s" % self)
+            models.signals.post_delete.send(sender=self.__class__, 
+                                            instance=self, 
+                                            using=using)
+            post_soft_delete.send(sender=self.__class__,
+                                  instance=self,
+                                  using=using)
 
     def _do_undelete(self, using=settings.DATABASES['default']):
         pre_undelete.send(sender=self.__class__,

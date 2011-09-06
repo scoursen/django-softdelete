@@ -2,6 +2,9 @@ django-softdelete
 
 Soft delete for Django ORM, with support for undelete.
 
+Can be tested directly with the following command:
+django-admin.py test softdelete --settings="softdelete.settings"
+
 Inspired by http://codespatter.com/2009/07/01/django-model-manager-soft-delete-how-to-customize-admin/
 
 This project mostly exists to be able to provide undelete of soft-deleted objects, along with proper

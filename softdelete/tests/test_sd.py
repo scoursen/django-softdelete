@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db.models import loading, query
 from django.core.management import call_command
+from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.db import models
@@ -111,6 +112,20 @@ class DeleteTest(BaseTest):
         self.assertEquals(self.rs_count+56, SoftDeleteRecord.objects.count()) 
         self._posttest()
 
+    def test_hard_delete(self):
+        self._pretest()
+        tmo_tmp = TestModelOne.objects.create(extra_bool=True)
+        tmo_tmp.delete()
+        self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
+        self.assertEquals(self.rs_count+1, SoftDeleteRecord.objects.count())
+        tmo_tmp.delete()
+        self.assertEquals(self.cs_count, ChangeSet.objects.count())
+        self.assertEquals(self.rs_count, SoftDeleteRecord.objects.count())
+        self.assertRaises(TestModelOne.DoesNotExist,
+                          TestModelOne.objects.get,
+                          pk=tmo_tmp.pk)
+
+
     def test_filter_delete(self):
         self._pretest()
         TestModelOne.objects.filter(pk=1).delete()
@@ -126,6 +141,7 @@ class AdminTest(BaseTest):
         u.is_staff = True
         u.is_superuser = True
         u.save()
+        self.assertFalse(self.tmo1.deleted)
         client.login(username='test-user', password='test')
         tmo = client.get('/admin/test_softdelete_app/testmodelone/1/')
         self.assertEquals(tmo.status_code, 200)
