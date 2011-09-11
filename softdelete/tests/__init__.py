@@ -1,3 +1,4 @@
+from django.conf import settings
 from softdelete.tests.test_sd import *
 from softdelete.tests.test_views import *
 
