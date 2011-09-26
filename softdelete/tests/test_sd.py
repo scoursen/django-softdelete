@@ -1,6 +1,4 @@
 from django.conf import settings
-from django.db.models import loading, query
-from django.core.management import call_command
 from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
