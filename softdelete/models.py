@@ -38,6 +38,11 @@ def _determine_change_set(obj, create=True):
     return qs
 
 class SoftDeleteQuerySet(query.QuerySet):
+    def all_with_deleted(self):
+        qs = super(SoftDeleteQuerySet, self).all()
+        qs.__class__ = SoftDeleteQuerySet
+        return qs
+    
     def delete(self, using=settings.DATABASES['default'], *args, **kwargs):
         if not len(self):
             return
