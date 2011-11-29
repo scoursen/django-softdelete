@@ -7,7 +7,8 @@ from softdelete.admin.forms import *
 import logging
 
 class SoftDeleteObjectInline(admin.TabularInline):
-    exclude = ('deleted_at',)
+    class Meta:
+        exclude = ('deleted_at',)
 
     def __init__(self, parent, site, *args, **kwargs):
         super(SoftDeleteObjectInline, self).__init__(parent, site, *args, **kwargs)
