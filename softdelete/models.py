@@ -43,7 +43,7 @@ class SoftDeleteQuerySet(query.QuerySet):
         qs.__class__ = SoftDeleteQuerySet
         return qs
     
-    def delete(self, using=settings.DATABASES['default'], *args, **kwargs):
+    def delete(self, using='default', *args, **kwargs):
         if not len(self):
             return
         cs = kwargs.get('changeset')
@@ -56,7 +56,7 @@ class SoftDeleteQuerySet(query.QuerySet):
             obj.delete(using, *args, **kwargs)        
 
 
-    def undelete(self, using=settings.DATABASES['default'], *args, **kwargs):
+    def undelete(self, using='default', *args, **kwargs):
         logging.debug("UNDELETING %s" % self)
         for obj in self:
             cs = _determine_change_set(obj)
@@ -177,7 +177,7 @@ class SoftDeleteObject(models.Model):
                                   instance=self,
                                   using=using)
 
-    def _do_undelete(self, using=settings.DATABASES['default']):
+    def _do_undelete(self, using='default'):
         pre_undelete.send(sender=self.__class__,
                           instance=self,
                           using=using)
@@ -187,7 +187,7 @@ class SoftDeleteObject(models.Model):
                            instance=self,
                            using=using)
 
-    def undelete(self, using=settings.DATABASES['default'], *args, **kwargs):
+    def undelete(self, using='default', *args, **kwargs):
         logging.debug('UNDELETING %s' % self)
         cs = kwargs.get('changeset') or _determine_change_set(self, False)
         cs.undelete(using)
@@ -216,7 +216,7 @@ class ChangeSet(models.Model):
     def set_content(self, obj):
         self.record = obj
 
-    def undelete(self, using=settings.DATABASES['default']):
+    def undelete(self, using='default'):
         logging.debug("CHANGESET UNDELETE: %s" % self)
         self.content._do_undelete(using)
         for related in self.soft_delete_records.all():
@@ -246,7 +246,7 @@ class SoftDeleteRecord(models.Model):
     def set_content(self, obj):
         self.record = obj
     
-    def undelete(self, using=settings.DATABASES['default']):
+    def undelete(self, using='default'):
         self.content._do_undelete(using)
 
     def __unicode__(self):
