@@ -136,7 +136,7 @@ class SoftDeleteObject(models.Model):
             logging.debug("HARD DELETEING type %s, %s" % (type(self), self))
             try:
                 cs = ChangeSet.objects.get(content_type=ContentType.objects.get_for_model(self),
-                                           objects_id=self.pk)
+                                           object_id=self.pk)
                 cs.delete()
                 super(SoftDeleteObject, self).delete(*args, **kwargs)
             except:
