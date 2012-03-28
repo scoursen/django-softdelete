@@ -63,15 +63,17 @@ class SoftDeleteQuerySet(query.QuerySet):
             cs.undelete()
         logging.debug("FINISHED UNDELETING %s" %self)
 
-
 class SoftDeleteManager(models.Manager):
     def get_query_set(self):
         qs = super(SoftDeleteManager,self).get_query_set().filter(deleted_at__isnull=1)
         qs.__class__ = SoftDeleteQuerySet
         return qs
 
-    def all_with_deleted(self):
-        qs = super(SoftDeleteManager, self).get_query_set()
+    def all_with_deleted(self, prt=False):
+        if hasattr(self, 'core_filters'): # it's a RelatedManager
+            qs = super(SoftDeleteManager, self).get_query_set().filter(**self.core_filters)
+        else:
+            qs = super(SoftDeleteManager, self).get_query_set()
         qs.__class__ = SoftDeleteQuerySet
         return qs
 
