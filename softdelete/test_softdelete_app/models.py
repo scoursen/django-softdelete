@@ -8,10 +8,11 @@ class TestModelOne(SoftDeleteObject):
     
 class TestModelTwo(SoftDeleteObject):
     extra_int = models.IntegerField()
-    tmo = models.ForeignKey(TestModelOne,related_name='tmos')
+    tmo = models.ForeignKey(TestModelOne,related_name='tmts')
     
 class TestModelThree(SoftDeleteObject):
     tmos = models.ManyToManyField(TestModelOne, through='TestModelThrough')
+    extra_int = models.IntegerField(blank=True, null=True)
 
 class TestModelThrough(SoftDeleteObject):
     tmo1 = models.ForeignKey(TestModelOne, related_name="left_side")

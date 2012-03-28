@@ -222,4 +222,49 @@ class M2MTests(BaseTest):
             self.assertFalse(x.deleted)
 
 
+class SoftDeleteRelatedFieldLookupsTests(BaseTest):
+    def test_related_foreign_key(self):
+        tmt1 = TestModelTwo.objects.create(extra_int=100, tmo=self.tmo1)
+        tmt2 = TestModelTwo.objects.create(extra_int=100, tmo=self.tmo2)
 
+        self.assertEquals(self.tmo1.tmts.filter(extra_int=100).count(), 1)
+        self.assertEquals(self.tmo1.tmts.filter(extra_int=100)[0].pk, tmt1.pk)
+        self.assertEquals(self.tmo2.tmts.filter(extra_int=100).count(), 1)
+        self.assertEquals(self.tmo2.tmts.filter(extra_int=100)[0].pk, tmt2.pk)
+
+        self.assertEquals(self.tmo1.tmts.get(extra_int=100), tmt1)
+        self.assertEquals(self.tmo2.tmts.get(extra_int=100), tmt2)
+
+        tmt1.delete()
+        self.assertEquals(self.tmo1.tmts.filter(extra_int=100).count(), 0)
+        tmt1.undelete()
+        self.assertEquals(self.tmo1.tmts.filter(extra_int=100).count(), 1)
+
+        tmt1.delete()
+        tmt1.delete()
+        self.assertRaises(TestModelTwo.DoesNotExist,
+                          self.tmo1.tmts.get, extra_int=100)
+
+    def test_related_m2m(self):
+        t31 = TestModelThree.objects.create(extra_int=100)
+        TestModelThrough.objects.create(tmo1=self.tmo1, tmo3=t31)
+        t32 = TestModelThree.objects.create(extra_int=100)
+        TestModelThrough.objects.create(tmo1=self.tmo2, tmo3=t32)
+
+        self.assertEquals(self.tmo1.testmodelthree_set.filter(extra_int=100).count(), 1)
+        self.assertEquals(self.tmo1.testmodelthree_set.filter(extra_int=100)[0].pk, t31.pk)
+        self.assertEquals(self.tmo2.testmodelthree_set.filter(extra_int=100).count(), 1)
+        self.assertEquals(self.tmo2.testmodelthree_set.filter(extra_int=100)[0].pk, t32.pk)
+
+        self.assertEquals(self.tmo1.testmodelthree_set.get(extra_int=100), t31)
+        self.assertEquals(self.tmo2.testmodelthree_set.get(extra_int=100), t32)
+
+        t31.delete()
+        self.assertEquals(self.tmo1.testmodelthree_set.filter(extra_int=100).count(), 0)
+        t31.undelete()
+        self.assertEquals(self.tmo1.testmodelthree_set.filter(extra_int=100).count(), 1)
+
+        t31.delete()
+        t31.delete()
+        self.assertRaises(TestModelThree.DoesNotExist,
+                          self.tmo1.testmodelthree_set.get, extra_int=100)
