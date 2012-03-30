@@ -13,6 +13,9 @@ setup(name='django-softdelete',
       install_requires=['setuptools',],
       include_package_data=True,
       setup_requires=['setuptools_hg',],
-      classifiers=['Framework::Django']
-	
+      classifiers=[
+        'Framework :: Django',
+        'License :: OSI Approved :: BSD License',
+        'Environment :: Web Environment',
+        ]
 )
