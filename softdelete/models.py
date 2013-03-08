@@ -8,7 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group, Permission
 import hashlib
-from datetime import datetime
+from django.utils import timezone
 import logging
 from softdelete.signals import *
 
@@ -113,7 +113,7 @@ class SoftDeleteObject(models.Model):
         """Called via the admin interface (if user checks the "deleted" checkox)"""
         if d and not self.deleted_at:
             self.__dirty = True
-            self.deleted_at = datetime.utcnow()
+            self.deleted_at = timezone.now()
         elif not d and self.deleted_at:
             self.__dirty = True
             self.deleted_at = None
@@ -167,7 +167,7 @@ class SoftDeleteObject(models.Model):
             SoftDeleteRecord.objects.get_or_create(changeset=cs,
                                                    content_type=ContentType.objects.get_for_model(self),
                                                    object_id=self.pk)
-            self.deleted_at = datetime.today()
+            self.deleted_at = timezone.now()
             self.save()
             for x in self._meta.get_all_related_objects():
                 self._do_delete(cs, x)
@@ -206,7 +206,7 @@ class SoftDeleteObject(models.Model):
 
 
 class ChangeSet(models.Model):
-    created_date = models.DateTimeField(default=datetime.utcnow)
+    created_date = models.DateTimeField(default=timezone.now)
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     record = generic.GenericForeignKey('content_type', 'object_id')
@@ -233,7 +233,7 @@ class ChangeSet(models.Model):
 
 class SoftDeleteRecord(models.Model):
     changeset = models.ForeignKey(ChangeSet, related_name='soft_delete_records')
-    created_date = models.DateTimeField(default=datetime.utcnow)
+    created_date = models.DateTimeField(default=timezone.now)
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     record = generic.GenericForeignKey('content_type', 'object_id')
