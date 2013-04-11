@@ -122,6 +122,11 @@ class SoftDeleteObject(models.Model):
 
     def _do_delete(self, changeset, related):
         rel = related.get_accessor_name()
+        
+        # Sometimes there is nothing to delete
+        if not hasattr(self, rel):
+            return
+        
         try:
             getattr(self, rel).all().delete(changeset=changeset)
         except:
