@@ -1,13 +1,12 @@
+import django
+
 from django.conf import settings
 from django.db.models import query
 from django.db import models
-from django.core.urlresolvers import reverse
-from django.db.utils import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
-from django.contrib.auth.models import User, Group, Permission
-import hashlib
+from django.contrib.auth.models import Group, Permission
 from django.utils import timezone
 import logging
 from softdelete.signals import *
@@ -64,21 +63,38 @@ class SoftDeleteQuerySet(query.QuerySet):
         logging.debug("FINISHED UNDELETING %s" %self)
 
 class SoftDeleteManager(models.Manager):
+
+    def _get_base_queryset(self):
+        '''
+        Convenience method for grabbing the base query set. Accounts for the
+        deprecation of get_query_set in Django 18.
+        '''
+
+        if django.VERSION >= (1, 8, 0, 'final', 0):
+            return super(SoftDeleteManager, self).get_queryset()
+        else:
+            return super(SoftDeleteManager, self).get_query_set()
+
     def get_query_set(self):
-        qs = super(SoftDeleteManager,self).get_query_set().filter(deleted_at__isnull=1)
+        qs = super(SoftDeleteManager,self).get_query_set().filter(deleted_at__isnull=True)
+        qs.__class__ = SoftDeleteQuerySet
+        return qs
+
+    def get_queryset(self):
+        qs = super(SoftDeleteManager,self).get_queryset().filter(deleted_at__isnull=True)
         qs.__class__ = SoftDeleteQuerySet
         return qs
 
     def all_with_deleted(self, prt=False):
         if hasattr(self, 'core_filters'): # it's a RelatedManager
-            qs = super(SoftDeleteManager, self).get_query_set().filter(**self.core_filters)
+            qs = self._get_base_queryset().filter(**self.core_filters)
         else:
-            qs = super(SoftDeleteManager, self).get_query_set()
+            qs = self._get_base_queryset()
         qs.__class__ = SoftDeleteQuerySet
         return qs
 
     def deleted_set(self):
-        qs = super(SoftDeleteManager, self).get_query_set().filter(deleted_at__isnull=0)
+        qs = self._get_base_queryset().filter(deleted_at__isnull=0)
         qs.__class__ = SoftDeleteQuerySet
         return qs
 
@@ -89,7 +105,7 @@ class SoftDeleteManager(models.Manager):
         if 'pk' in kwargs:
             qs = self.all_with_deleted().filter(*args, **kwargs)
         else:
-            qs = self.get_query_set().filter(*args, **kwargs)
+            qs = self._get_base_queryset().filter(*args, **kwargs)
         qs.__class__ = SoftDeleteQuerySet
         return qs
 
