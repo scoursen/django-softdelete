@@ -19,17 +19,17 @@ except:
 def _determine_change_set(obj, create=True):
     try:
         qs = SoftDeleteRecord.objects.filter(content_type=ContentType.objects.get_for_model(obj),
-                                             object_id=obj.pk).latest('created_date').changeset
+                                             object_id=str(obj.pk)).latest('created_date').changeset
         logging.debug("Found changeset via latest recordset")
     except:
         try:
             qs = ChangeSet.objects.filter(content_type=ContentType.objects.get_for_model(obj),
-                                          object_id=obj.pk).latest('created_date')
+                                          object_id=str(obj.pk)).latest('created_date')
             logging.debug("Found changeset")
         except:
             if create:
                 qs = ChangeSet.objects.create(content_type=ContentType.objects.get_for_model(obj),
-                                              object_id=obj.pk)
+                                              object_id=str(obj.pk))
                 logging.debug("Creating changeset")
             else:
                 logging.debug("Raising ObjectDoesNotExist")
@@ -50,7 +50,7 @@ class SoftDeleteQuerySet(query.QuerySet):
         for obj in self:
             rs, c = SoftDeleteRecord.objects.get_or_create(changeset=cs or _determine_change_set(obj),
                                                            content_type=ContentType.objects.get_for_model(obj),
-                                                           object_id=obj.pk)
+                                                           object_id=str(obj.pk))
             logging.debug(" -----  CALLING delete() on %s" % obj)
             obj.delete(using, *args, **kwargs)        
 
