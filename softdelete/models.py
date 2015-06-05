@@ -229,7 +229,7 @@ class SoftDeleteObject(models.Model):
 class ChangeSet(models.Model):
     created_date = models.DateTimeField(default=timezone.now)
     content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
+    object_id = models.CharField(max_length=100)
     record = generic.GenericForeignKey('content_type', 'object_id')
 
     def get_content(self):
@@ -256,7 +256,7 @@ class SoftDeleteRecord(models.Model):
     changeset = models.ForeignKey(ChangeSet, related_name='soft_delete_records')
     created_date = models.DateTimeField(default=timezone.now)
     content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
+    object_id = models.CharField(max_length=100)
     record = generic.GenericForeignKey('content_type', 'object_id')
 
     class Meta:
