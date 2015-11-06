@@ -1,71 +1,38 @@
-# encoding: utf-8
-import datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
-class Migration(SchemaMigration):
-
-    def forwards(self, orm):
-        
-        # Adding model 'ChangeSet'
-        db.create_table('softdelete_changeset', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('created_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.utcnow)),
-            ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'])),
-            ('object_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
-        ))
-        db.send_create_signal('softdelete', ['ChangeSet'])
-
-        # Adding model 'RecordSet'
-        db.create_table('softdelete_recordset', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('changeset', self.gf('django.db.models.fields.related.ForeignKey')(related_name='recordsets', to=orm['softdelete.ChangeSet'])),
-            ('created_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.utcnow)),
-            ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'])),
-            ('object_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
-        ))
-        db.send_create_signal('softdelete', ['RecordSet'])
-
-        # Adding unique constraint on 'RecordSet', fields ['changeset', 'content_type', 'object_id']
-        db.create_unique('softdelete_recordset', ['changeset_id', 'content_type_id', 'object_id'])
+from django.db import migrations, models
+import django.utils.timezone
 
 
-    def backwards(self, orm):
-        
-        # Removing unique constraint on 'RecordSet', fields ['changeset', 'content_type', 'object_id']
-        db.delete_unique('softdelete_recordset', ['changeset_id', 'content_type_id', 'object_id'])
+class Migration(migrations.Migration):
 
-        # Deleting model 'ChangeSet'
-        db.delete_table('softdelete_changeset')
+    dependencies = [
+        ('contenttypes', '0002_remove_content_type_name'),
+    ]
 
-        # Deleting model 'RecordSet'
-        db.delete_table('softdelete_recordset')
-
-
-    models = {
-        'contenttypes.contenttype': {
-            'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
-            'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
-        },
-        'softdelete.changeset': {
-            'Meta': {'object_name': 'ChangeSet'},
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
-            'created_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.utcnow'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'object_id': ('django.db.models.fields.PositiveIntegerField', [], {})
-        },
-        'softdelete.recordset': {
-            'Meta': {'unique_together': "(('changeset', 'content_type', 'object_id'),)", 'object_name': 'RecordSet'},
-            'changeset': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'recordsets'", 'to': "orm['softdelete.ChangeSet']"}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
-            'created_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.utcnow'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'object_id': ('django.db.models.fields.PositiveIntegerField', [], {})
-        }
-    }
-
-    complete_apps = ['softdelete']
+    operations = [
+        migrations.CreateModel(
+            name='ChangeSet',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('created_date', models.DateTimeField(default=django.utils.timezone.now)),
+                ('object_id', models.PositiveIntegerField()),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='SoftDeleteRecord',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('created_date', models.DateTimeField(default=django.utils.timezone.now)),
+                ('object_id', models.PositiveIntegerField()),
+                ('changeset', models.ForeignKey(related_name='soft_delete_records', to='softdelete.ChangeSet')),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
+            ],
+        ),
+        migrations.AlterUniqueTogether(
+            name='softdeleterecord',
+            unique_together=set([('changeset', 'content_type', 'object_id')]),
+        ),
+    ]
