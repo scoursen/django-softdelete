@@ -1,7 +1,7 @@
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'my_db', 
+        'NAME': 'my_db',
         }
     }
 TEMPLATE_LOADERS = (
@@ -11,7 +11,15 @@ TEMPLATE_LOADERS = (
 )
 
 
-INSTALLED_APPS = ['softdelete', 'django.contrib.auth', 'django.contrib.contenttypes', 'django.contrib.sessions', 'django.contrib.admin', 'registration', 'registration_defaults']
+INSTALLED_APPS = [
+    'softdelete',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.admin',
+    'registration',
+    'registration_defaults'
+]
 
-DOMAIN='http://testserver'
+DOMAIN = 'http://testserver'
 ROOT_URLCONF = 'softdelete.urls'

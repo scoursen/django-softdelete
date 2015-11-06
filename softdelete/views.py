@@ -60,4 +60,3 @@ class ChangeSetUpdate(ProtectedView, UpdateView):
                                                 args=(kwargs['changeset_pk'],)))
         self.get_object().undelete()
         return HttpResponseRedirect(self.get_success_url())
-
