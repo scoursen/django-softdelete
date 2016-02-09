@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='django-softdelete',
-      version='0.4.0',
+      version='0.4.1',
       description='Soft delete support for Django ORM, with undelete.',
       author='Steve Coursen',
       author_email='smcoursen@gmail.com',
