@@ -80,6 +80,17 @@ class SoftDeleteManager(models.Manager):
         else:
             return super(SoftDeleteManager, self).get_query_set()
 
+    def _get_self_queryset(self):
+        '''
+        Convenience method for grabbing the query set. Accounts for the
+        deprecation of get_query_set in Django 18.
+        '''
+
+        if django.VERSION >= (1, 8, 0, 'final', 0):
+            return self.get_queryset()
+        else:
+            return self.get_query_set()
+
     def get_query_set(self):
         qs = super(SoftDeleteManager, self).get_query_set().filter(
             deleted_at__isnull=True)
@@ -112,7 +123,7 @@ class SoftDeleteManager(models.Manager):
         if 'pk' in kwargs:
             qs = self.all_with_deleted().filter(*args, **kwargs)
         else:
-            qs = self._get_base_queryset().filter(*args, **kwargs)
+            qs = self._get_self_queryset().filter(*args, **kwargs)
         qs.__class__ = SoftDeleteQuerySet
         return qs
 
