@@ -23,6 +23,13 @@ class SoftDeleteObjectInline(admin.TabularInline):
             qs = qs.order_by(*ordering)
         return qs
 
+    def get_queryset(self, request):
+        qs = self.model._default_manager.all_with_deleted()
+        ordering = self.get_ordering or ()
+        if ordering:
+            qs = qs.order_by(*ordering)
+        return qs
+
 class SoftDeleteObjectAdmin(admin.ModelAdmin):
     form = SoftDeleteObjectAdminForm
     actions = ['delete_selected', 'soft_undelete']
@@ -51,6 +58,16 @@ class SoftDeleteObjectAdmin(admin.ModelAdmin):
             qs = qs.order_by(*ordering)
         return qs
 
+    def get_queryset(self, request):
+        try:
+            qs = self.model._default_manager.all_with_deleted()
+        except Exception as ex:
+            qs = self.model._default_manager.all()
+
+        ordering = self.get_ordering or ()
+        if ordering:
+            qs = qs.order_by(*ordering)
+        return qs
 
 class SoftDeleteRecordInline(admin.TabularInline):
     model = SoftDeleteRecord
@@ -70,7 +87,7 @@ class SoftDeleteRecordAdmin(admin.ModelAdmin):
     def response_change(self, request, obj, *args, **kwargs):
         if request.POST.has_key('undelete'):
             obj.undelete()
-            return HttpResponseRedirect('../')
+            return HttpResponseRedirect('../../')
         return super(SoftDeleteRecordAdmin, self).response_change(request, obj, 
                                                                   *args, **kwargs)
 
@@ -93,7 +110,7 @@ class ChangeSetAdmin(admin.ModelAdmin):
     def response_change(self, request, obj, *args, **kwargs):
         if request.POST.has_key('undelete'):
             obj.undelete()
-            return HttpResponseRedirect('../')
+            return HttpResponseRedirect('../../')
         return super(ChangeSetAdmin, self).response_change(request, obj, 
                                                            *args, **kwargs)
 
