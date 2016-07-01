@@ -32,7 +32,7 @@ class ViewBase(TestCase):
 class ViewTest(ViewBase):
     def __init__(self, *args, **kwargs):
         settings.USE_SOFTDELETE_GROUP = kwargs.get('USE_SOFTDELETE_GROUP', False)
-        if kwargs.has_key('USE_SOFTDELETE_GROUP'):
+        if 'USE_SOFTDELETE_GROUP' in kwargs:
             del kwargs['USE_SOFTDELETE_GROUP']
         super(ViewTest, self).__init__(*args, **kwargs)
 

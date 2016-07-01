@@ -18,7 +18,7 @@ class SoftDeleteObjectAdminForm(ModelForm):
 
     def clean(self, *args, **kwargs):
         cleaned_data = super(SoftDeleteObjectAdminForm, self).clean(*args, **kwargs)
-        if self.data.has_key('undelete'):
+        if 'undelete' in self.data:
             self.instance.deleted = False
             cleaned_data['deleted'] = False
         return cleaned_data
