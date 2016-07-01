@@ -43,7 +43,7 @@ class SoftDeleteObjectAdmin(admin.ModelAdmin):
     soft_undelete.short_description = 'Undelete selected objects'
 
     def response_change(self, request, obj, *args, **kwargs):
-        if request.POST.has_key('undelete'):
+        if 'undelete' in request.POST:
             return HttpResponseRedirect('../')
         return super(SoftDeleteObjectAdmin, self).response_change(request, obj, *args, **kwargs)
 
@@ -85,7 +85,7 @@ class SoftDeleteRecordAdmin(admin.ModelAdmin):
     soft_undelete.short_description = 'Undelete selected objects'
 
     def response_change(self, request, obj, *args, **kwargs):
-        if request.POST.has_key('undelete'):
+        if 'undelete' in request.POST:
             obj.undelete()
             return HttpResponseRedirect('../../')
         return super(SoftDeleteRecordAdmin, self).response_change(request, obj, 
@@ -108,7 +108,7 @@ class ChangeSetAdmin(admin.ModelAdmin):
     soft_undelete.short_description = 'Undelete selected objects'
 
     def response_change(self, request, obj, *args, **kwargs):
-        if request.POST.has_key('undelete'):
+        if 'undelete' in request.POST:
             obj.undelete()
             return HttpResponseRedirect('../../')
         return super(ChangeSetAdmin, self).response_change(request, obj, 
