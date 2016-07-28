@@ -25,7 +25,7 @@ class SoftDeleteObjectInline(admin.TabularInline):
 
     def get_queryset(self, request):
         qs = self.model._default_manager.all_with_deleted()
-        ordering = self.get_ordering or ()
+        ordering = self.get_ordering(request) or ()
         if ordering:
             qs = qs.order_by(*ordering)
         return qs
@@ -64,7 +64,7 @@ class SoftDeleteObjectAdmin(admin.ModelAdmin):
         except Exception as ex:
             qs = self.model._default_manager.all()
 
-        ordering = self.get_ordering or ()
+        ordering = self.get_ordering(request) or ()
         if ordering:
             qs = qs.order_by(*ordering)
         return qs
