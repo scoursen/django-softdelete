@@ -164,7 +164,10 @@ class SoftDeleteObject(models.Model):
             return
 
         try:
-            getattr(self, rel).all().delete(changeset=changeset)
+            if related.one_to_one:
+                getattr(self, rel).delete(changeset=changeset)
+            else:
+                getattr(self, rel).all().delete(changeset=changeset)
         except:
             try:
                 getattr(self, rel).all().delete()
