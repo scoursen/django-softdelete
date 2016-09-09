@@ -214,7 +214,12 @@ class SoftDeleteObject(models.Model):
                 object_id=self.pk)
             self.deleted_at = timezone.now()
             self.save()
-            for x in self._meta.get_all_related_objects():
+            all_related = [
+                f for f in MyModel._meta.get_fields()
+                if (f.one_to_many or f.one_to_one)
+                and f.auto_created and not f.concrete
+            ]
+            for x in all_related:
                 self._do_delete(cs, x)
             logging.debug("FINISHED SOFT DELETING RELATED %s" % self)
             models.signals.post_delete.send(sender=self.__class__,
