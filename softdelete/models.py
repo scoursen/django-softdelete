@@ -218,7 +218,7 @@ class SoftDeleteObject(models.Model):
             self.deleted_at = timezone.now()
             self.save()
             all_related = [
-                f for f in MyModel._meta.get_fields()
+                f for f in self._meta.get_fields()
                 if (f.one_to_many or f.one_to_one)
                 and f.auto_created and not f.concrete
             ]
