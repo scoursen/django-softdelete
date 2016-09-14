@@ -51,20 +51,20 @@ class SoftDeleteQuerySet(query.QuerySet):
         if not len(self):
             return
         cs = kwargs.get('changeset')
-        logging.debug("STARTING QUERYSET SOFT-DELETE: %s. %s" % (self, len(self)))
+        logging.debug("STARTING QUERYSET SOFT-DELETE: %s. %s", self, len(self))
         for obj in self:
             rs, c = SoftDeleteRecord.objects.get_or_create(changeset=cs or _determine_change_set(obj),
                                                            content_type=ContentType.objects.get_for_model(obj),
                                                            object_id=str(obj.pk))
-            logging.debug(" -----  CALLING delete() on %s" % obj)
+            logging.debug(" -----  CALLING delete() on %s", obj)
             obj.delete(using, *args, **kwargs)
 
     def undelete(self, using='default', *args, **kwargs):
-        logging.debug("UNDELETING %s" % self)
+        logging.debug("UNDELETING %s", self)
         for obj in self:
             cs = _determine_change_set(obj)
             cs.undelete()
-        logging.debug("FINISHED UNDELETING %s" %self)
+        logging.debug("FINISHED UNDELETING %s", self)
 
 
 class SoftDeleteManager(models.Manager):
@@ -180,7 +180,7 @@ class SoftDeleteObject(models.Model):
 
     def delete(self, *args, **kwargs):
         if self.deleted_at:
-            logging.debug("HARD DELETEING type %s, %s" % (type(self), self))
+            logging.debug("HARD DELETEING type %s, %s", type(self), self)
             try:
                 cs = ChangeSet.objects.get(
                     content_type=ContentType.objects.get_for_model(self),
@@ -209,7 +209,7 @@ class SoftDeleteObject(models.Model):
             pre_soft_delete.send(sender=self.__class__,
                                  instance=self,
                                  using=using)
-            logging.debug('SOFT DELETING type: %s, %s' % (type(self), self))
+            logging.debug('SOFT DELETING type: %s, %s', type(self), self)
             cs = kwargs.get('changeset') or _determine_change_set(self)
             SoftDeleteRecord.objects.get_or_create(
                 changeset=cs,
@@ -224,7 +224,7 @@ class SoftDeleteObject(models.Model):
             ]
             for x in all_related:
                 self._do_delete(cs, x)
-            logging.debug("FINISHED SOFT DELETING RELATED %s" % self)
+            logging.debug("FINISHED SOFT DELETING RELATED %s", self)
             models.signals.post_delete.send(sender=self.__class__,
                                             instance=self,
                                             using=using)
@@ -246,7 +246,7 @@ class SoftDeleteObject(models.Model):
         logging.debug('UNDELETING %s' % self)
         cs = kwargs.get('changeset') or _determine_change_set(self, False)
         cs.undelete(using)
-        logging.debug('FINISHED UNDELETING RELATED %s' % self)
+        logging.debug('FINISHED UNDELETING RELATED %s', self)
 
     def save(self, **kwargs):
         super(SoftDeleteObject, self).save(**kwargs)
@@ -278,7 +278,7 @@ class ChangeSet(models.Model):
         for related in self.soft_delete_records.all():
             related.undelete(using)
         self.delete()
-        logging.debug("FINISHED CHANGESET UNDELETE: %s" % self)
+        logging.debug("FINISHED CHANGESET UNDELETE: %s", self)
 
     def __unicode__(self):
         return 'Changeset: %s, %s' % (self.created_date, self.record)
