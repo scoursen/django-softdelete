@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import django
 
 from django.conf import settings
@@ -5,6 +7,8 @@ from django.db.models import query
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
+from django.utils.encoding import python_2_unicode_compatible
+
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey
 except ImportError:
@@ -51,24 +55,23 @@ class SoftDeleteQuerySet(query.QuerySet):
         if not len(self):
             return
         cs = kwargs.get('changeset')
-        logging.debug("STARTING QUERYSET SOFT-DELETE: %s. %s", self, len(self))
+        logging.debug("STARTING QUERYSET SOFT-DELETE: %s. %s" % (self, len(self)))
         for obj in self:
             rs, c = SoftDeleteRecord.objects.get_or_create(changeset=cs or _determine_change_set(obj),
                                                            content_type=ContentType.objects.get_for_model(obj),
                                                            object_id=str(obj.pk))
-            logging.debug(" -----  CALLING delete() on %s", obj)
+            logging.debug(" -----  CALLING delete() on %s" % obj)
             obj.delete(using, *args, **kwargs)
 
     def undelete(self, using='default', *args, **kwargs):
-        logging.debug("UNDELETING %s", self)
+        logging.debug("UNDELETING %s" % self)
         for obj in self:
             cs = _determine_change_set(obj)
             cs.undelete()
-        logging.debug("FINISHED UNDELETING %s", self)
+        logging.debug("FINISHED UNDELETING %s" % self)
 
 
 class SoftDeleteManager(models.Manager):
-
     def _get_base_queryset(self):
         '''
         Convenience method for grabbing the base query set. Accounts for the
@@ -117,10 +120,7 @@ class SoftDeleteManager(models.Manager):
         return qs
 
     def get(self, *args, **kwargs):
-        if 'pk' in kwargs:
-            return self.all_with_deleted().get(*args, **kwargs)
-        else:
-            return self._get_self_queryset().get(*args, **kwargs)
+        return self.all_with_deleted().get(*args, **kwargs)
 
     def filter(self, *args, **kwargs):
         if 'pk' in kwargs:
@@ -139,7 +139,7 @@ class SoftDeleteObject(models.Model):
         abstract = True
         permissions = (
             ('can_undelete', 'Can undelete this object'),
-            )
+        )
 
     def __init__(self, *args, **kwargs):
         super(SoftDeleteObject, self).__init__(*args, **kwargs)
@@ -167,10 +167,7 @@ class SoftDeleteObject(models.Model):
             return
 
         try:
-            if related.one_to_one:
-                getattr(self, rel).delete(changeset=changeset)
-            else:
-                getattr(self, rel).all().delete(changeset=changeset)
+            getattr(self, rel).all().delete(changeset=changeset)
         except:
             try:
                 getattr(self, rel).all().delete()
@@ -183,7 +180,7 @@ class SoftDeleteObject(models.Model):
 
     def delete(self, *args, **kwargs):
         if self.deleted_at:
-            logging.debug("HARD DELETEING type %s, %s", type(self), self)
+            logging.debug("HARD DELETEING type %s, %s" % (type(self), self))
             try:
                 cs = ChangeSet.objects.get(
                     content_type=ContentType.objects.get_for_model(self),
@@ -212,7 +209,7 @@ class SoftDeleteObject(models.Model):
             pre_soft_delete.send(sender=self.__class__,
                                  instance=self,
                                  using=using)
-            logging.debug('SOFT DELETING type: %s, %s', type(self), self)
+            logging.debug('SOFT DELETING type: %s, %s' % (type(self), self))
             cs = kwargs.get('changeset') or _determine_change_set(self)
             SoftDeleteRecord.objects.get_or_create(
                 changeset=cs,
@@ -220,14 +217,9 @@ class SoftDeleteObject(models.Model):
                 object_id=self.pk)
             self.deleted_at = timezone.now()
             self.save()
-            all_related = [
-                f for f in self._meta.get_fields()
-                if (f.one_to_many or f.one_to_one)
-                and f.auto_created and not f.concrete
-            ]
-            for x in all_related:
+            for x in self._meta.get_all_related_objects():
                 self._do_delete(cs, x)
-            logging.debug("FINISHED SOFT DELETING RELATED %s", self)
+            logging.debug("FINISHED SOFT DELETING RELATED %s" % self)
             models.signals.post_delete.send(sender=self.__class__,
                                             instance=self,
                                             using=using)
@@ -249,7 +241,7 @@ class SoftDeleteObject(models.Model):
         logging.debug('UNDELETING %s' % self)
         cs = kwargs.get('changeset') or _determine_change_set(self, False)
         cs.undelete(using)
-        logging.debug('FINISHED UNDELETING RELATED %s', self)
+        logging.debug('FINISHED UNDELETING RELATED %s' % self)
 
     def save(self, **kwargs):
         super(SoftDeleteObject, self).save(**kwargs)
@@ -261,6 +253,7 @@ class SoftDeleteObject(models.Model):
                 self.delete()
 
 
+@python_2_unicode_compatible
 class ChangeSet(models.Model):
     created_date = models.DateTimeField(default=timezone.now)
     content_type = models.ForeignKey(ContentType)
@@ -281,14 +274,14 @@ class ChangeSet(models.Model):
         for related in self.soft_delete_records.all():
             related.undelete(using)
         self.delete()
-        logging.debug("FINISHED CHANGESET UNDELETE: %s", self)
+        logging.debug("FINISHED CHANGESET UNDELETE: %s" % self)
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Changeset: %s, %s' % (self.created_date, self.record)
 
     content = property(get_content, set_content)
 
-
+@python_2_unicode_compatible
 class SoftDeleteRecord(models.Model):
     changeset = models.ForeignKey(ChangeSet, related_name='soft_delete_records')
     created_date = models.DateTimeField(default=timezone.now)
@@ -309,7 +302,7 @@ class SoftDeleteRecord(models.Model):
     def undelete(self, using='default'):
         self.content._do_undelete(using)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'SoftDeleteRecord: (%s), (%s/%s), %s' % (
             self.content,
             self.content_type,
