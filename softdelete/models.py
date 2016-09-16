@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import django
 
 from django.conf import settings
@@ -5,6 +7,7 @@ from django.db.models import query
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
+from django.utils.encoding import python_2_unicode_compatible
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey
 except ImportError:
@@ -260,7 +263,7 @@ class SoftDeleteObject(models.Model):
             else:
                 self.delete()
 
-
+@python_2_unicode_compatible
 class ChangeSet(models.Model):
     created_date = models.DateTimeField(default=timezone.now)
     content_type = models.ForeignKey(ContentType)
@@ -283,12 +286,12 @@ class ChangeSet(models.Model):
         self.delete()
         logging.debug("FINISHED CHANGESET UNDELETE: %s", self)
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Changeset: %s, %s' % (self.created_date, self.record)
 
     content = property(get_content, set_content)
 
-
+@python_2_unicode_compatible
 class SoftDeleteRecord(models.Model):
     changeset = models.ForeignKey(ChangeSet, related_name='soft_delete_records')
     created_date = models.DateTimeField(default=timezone.now)
@@ -309,7 +312,7 @@ class SoftDeleteRecord(models.Model):
     def undelete(self, using='default'):
         self.content._do_undelete(using)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'SoftDeleteRecord: (%s), (%s/%s), %s' % (
             self.content,
             self.content_type,
