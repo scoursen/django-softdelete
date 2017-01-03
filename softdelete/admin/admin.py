@@ -16,19 +16,14 @@ class SoftDeleteObjectInline(admin.TabularInline):
             self.extra = 0
             self.max_num = 0
 
-    def queryset(self, request):
-        qs = self.model._default_manager.all_with_deleted()
-        ordering = self.ordering or ()
-        if ordering:
-            qs = qs.order_by(*ordering)
-        return qs
-
     def get_queryset(self, request):
         qs = self.model._default_manager.all_with_deleted()
         ordering = self.get_ordering(request) or ()
         if ordering:
             qs = qs.order_by(*ordering)
         return qs
+    
+    queryset = get_queryset
 
 class SoftDeleteObjectAdmin(admin.ModelAdmin):
     form = SoftDeleteObjectAdminForm
@@ -47,17 +42,6 @@ class SoftDeleteObjectAdmin(admin.ModelAdmin):
             return HttpResponseRedirect('../')
         return super(SoftDeleteObjectAdmin, self).response_change(request, obj, *args, **kwargs)
 
-    def queryset(self, request):
-        try:
-            qs = self.model._default_manager.all_with_deleted()
-        except Exception as ex:
-            qs = self.model._default_manager.all()
-
-        ordering = self.ordering or ()
-        if ordering:
-            qs = qs.order_by(*ordering)
-        return qs
-
     def get_queryset(self, request):
         try:
             qs = self.model._default_manager.all_with_deleted()
@@ -68,6 +52,8 @@ class SoftDeleteObjectAdmin(admin.ModelAdmin):
         if ordering:
             qs = qs.order_by(*ordering)
         return qs
+    
+    queryset = get_queryset
 
 class SoftDeleteRecordInline(admin.TabularInline):
     model = SoftDeleteRecord
