@@ -7,6 +7,11 @@ from softdelete.test_softdelete_app.models import TestModelOne, TestModelTwo, Te
 from softdelete.models import *
 from softdelete.signals import *
 import logging
+try:
+    from django.core.urlresolvers import reverse
+except ImportError:
+    from django.urls import reverse
+
 
 class BaseTest(TestCase):
     def setUp(self):
@@ -69,7 +74,7 @@ class DeleteTest(BaseTest):
 
     def pre_soft_delete(self, *args, **kwargs):
         self.pre_soft_delete_called = True
-        
+
     def post_soft_delete(self, *args, **kwargs):
         self.post_soft_delete_called = True
 
@@ -102,12 +107,12 @@ class DeleteTest(BaseTest):
         self.assertTrue(self.pre_soft_delete_called)
         self.assertTrue(self.post_soft_delete_called)
         self.tmo1.undelete()
-        
+
     def test_delete(self):
         self._pretest()
         self.tmo1.delete()
         self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+56, SoftDeleteRecord.objects.count()) 
+        self.assertEquals(self.rs_count+56, SoftDeleteRecord.objects.count())
         self._posttest()
 
     def test_hard_delete(self):
@@ -164,7 +169,7 @@ class AuthorizationTest(BaseTest):
 class UndeleteTest(BaseTest):
     def pre_undelete(self, *args, **kwargs):
         self.pre_undelete_called = True
-        
+
     def post_undelete(self, *args, **kwargs):
         self.post_undelete_called = True
 

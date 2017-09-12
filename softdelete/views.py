@@ -29,10 +29,10 @@ class ChangeSetList(ProtectedView, ListView):
     model = ChangeSet
 
     def get_query_set(self):
-        return model.objects.all()
+        return self.model.objects.all()
 
     def get_queryset(self):
-        return model.objects.all()
+        return self.model.objects.all()
 
 class ChangeSetDetail(ProtectedView, DetailView):
     model = ChangeSet

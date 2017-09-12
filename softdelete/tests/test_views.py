@@ -2,10 +2,15 @@ from django.conf import settings
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.db import models
-from softdelete.test_softdelete_app.models import TestModelOne, TestModelTwo
+from softdelete.test_softdelete_app.models import TestModelOne, TestModelTwo, TestModelThree
 from softdelete.models import *
 from softdelete.signals import *
 import logging
+try:
+    from django.core.urlresolvers import reverse
+except ImportError:
+    from django.urls import reverse
+
 
 class ViewBase(TestCase):
     def setUp(self):
@@ -22,6 +27,7 @@ class ViewBase(TestCase):
             assign_permissions(u)
         u.save()
         self.tmo1 = TestModelOne.objects.create(extra_bool=True)
+        self.tmo3 = TestModelThree.objects.create(extra_int=3)
         for x in range(10):
             TestModelTwo.objects.create(extra_int=x, tmo=self.tmo1)
         self.tmo2 = TestModelOne.objects.create(extra_bool=False)
@@ -61,16 +67,16 @@ class ViewTest(ViewBase):
     def test_undelete(self):
         self.cs_count = ChangeSet.objects.count()
         self.rs_count = SoftDeleteRecord.objects.count()
-        self.t_count = TestModelOne.objects.count()
-        self.tmo1.delete()
-        self.assertEquals(self.t_count-1, TestModelOne.objects.count())
-        self.assertEquals(0, self.tmo1.tmos.count())
+        self.t_count = TestModelThree.objects.count()
+        self.tmo3.delete()
+        self.assertEquals(self.t_count-1, TestModelThree.objects.count())
+        self.assertEquals(0, self.tmo3.tmos.count())
         self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+11, SoftDeleteRecord.objects.count())
+        self.assertEquals(self.rs_count+1, SoftDeleteRecord.objects.count())
         rv = self.client.get(reverse("softdelete.changeset.undelete",
                                      args=(ChangeSet.objects.latest("created_date").pk,)))
         self.assertEquals(rv.status_code,200)
-        rv = self.client.post(reverse("softdelete.changeset.undelete", 
+        rv = self.client.post(reverse("softdelete.changeset.undelete",
                                      args=(ChangeSet.objects.latest("created_date").pk,)),
                              {'action': 'Undelete'})
         self.assertEquals(rv.status_code, 302)
@@ -78,8 +84,8 @@ class ViewTest(ViewBase):
         self.assertEquals(rv.status_code, 200)
         self.assertEquals(self.cs_count, ChangeSet.objects.count())
         self.assertEquals(self.rs_count, SoftDeleteRecord.objects.count())
-        self.assertEquals(self.t_count, TestModelOne.objects.count())
-        self.assertEquals(10, self.tmo1.tmos.count())
+        self.assertEquals(self.t_count, TestModelThree.objects.count())
+        self.assertEquals(0, self.tmo3.tmos.count())
 
 class GroupViewTest(ViewTest):
     def __init__(self, *args, **kwargs):
