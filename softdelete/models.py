@@ -266,7 +266,7 @@ class SoftDeleteObject(models.Model):
 @python_2_unicode_compatible
 class ChangeSet(models.Model):
     created_date = models.DateTimeField(default=timezone.now)
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=100)
     record = GenericForeignKey('content_type', 'object_id')
 
@@ -298,9 +298,13 @@ class ChangeSet(models.Model):
 
 @python_2_unicode_compatible
 class SoftDeleteRecord(models.Model):
-    changeset = models.ForeignKey(ChangeSet, related_name='soft_delete_records')
+    changeset = models.ForeignKey(
+        ChangeSet,
+        related_name='soft_delete_records',
+        on_delete=models.CASCADE
+    )
     created_date = models.DateTimeField(default=timezone.now)
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=100)
     record = GenericForeignKey('content_type', 'object_id')
 
