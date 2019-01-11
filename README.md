@@ -1,6 +1,6 @@
 django-softdelete
 
-Soft delete for Django ORM, with support for undelete.
+Soft delete for Django ORM, with support for undelete.  Supports Django 2.0+
 
 This project provides undelete of soft-deleted objects, along with proper undeletion of related objects.
 
