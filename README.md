@@ -12,6 +12,10 @@ Requirements
 * Django 1.8+
 * django.contrib.contenttypes
 
+Installation
+=============
+    pip install django-softdelete
+
 Configuration
 =============
 
