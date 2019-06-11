@@ -9,7 +9,7 @@ Inspired by http://codespatter.com/2009/07/01/django-model-manager-soft-delete-h
 Requirements
 ============
 
-* Django 1.8
+* Django 1.8+
 * django.contrib.contenttypes
 
 Configuration
