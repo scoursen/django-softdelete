@@ -16,12 +16,22 @@ Configuration
 =============
 
 There are simple templates files in `templates/`.  You will need to add Django's
-egg loader to use the templates as is:
+egg loader to use the templates as is, that would look something like this:
 
-    TEMPLATE_LOADERS = (
-    ...
-        'django.template.loaders.eggs.Loader',
-    )
+    TEMPLATES = [
+        {
+            'BACKEND': 'django.template.backends.django.DjangoTemplates',
+            'APP_DIRS': True,
+            'DIRS': '/path/to/my/templates',
+            'OPTIONS': {
+                 'loaders': (
+                      'django.template.loaders.filesystem.Loader',
+                      'django.template.loaders.app_directories.Loader',
+                      'django.template.loaders.eggs.Loader',
+                  ),
+             }
+        },
+    ]
 
 Add the project `softdelete` to your `INSTALLED_APPS` for
 through-the-web undelete support.
