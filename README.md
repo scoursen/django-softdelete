@@ -25,13 +25,11 @@ egg loader to use the templates as is, that would look something like this:
     TEMPLATES = [
         {
             'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'APP_DIRS': True,
             'DIRS': '/path/to/my/templates',
             'OPTIONS': {
                  'loaders': (
                       'django.template.loaders.filesystem.Loader',
                       'django.template.loaders.app_directories.Loader',
-                      'django.template.loaders.eggs.Loader',
                   ),
              }
         },

@@ -15,6 +15,12 @@ urlpatterns = [
 
 import sys
 if 'test' in sys.argv:
+    import django
     from django.contrib import admin
     admin.autodiscover()
-    urlpatterns.append(url(r'^admin/', include(admin.site.urls)))
+
+    if django.VERSION[0] >= 2:
+        from django.urls import path
+        urlpatterns.append(path('admin/', admin.site.urls))
+    else:
+        urlpatterns.append(url(r'^admin/', include(admin.site.urls)))

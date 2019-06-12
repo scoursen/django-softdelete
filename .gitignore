@@ -10,3 +10,10 @@ eggs
 parts
 src/*.egg-info
 my_db
+
+# Not needed since this is only an app
+manage.py
+
+# WingIDE project files
+*.wpr
+*.wpu
