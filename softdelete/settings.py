@@ -1,4 +1,5 @@
 import sys
+import django
 
 DATABASES = {
     'default': {
@@ -6,12 +7,6 @@ DATABASES = {
         'NAME': 'my_db',
         }
     }
-TEMPLATE_LOADERS = (
-    'django.template.loaders.app_directories.Loader',
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.eggs.Loader',
-)
-
 
 INSTALLED_APPS = [
     'softdelete',
@@ -19,16 +14,50 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.admin',
+    'django.contrib.messages',
 ]
 
-MIDDLEWARE_CLASSES = [
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-]
-
+if django.VERSION[0] >= 2:
+    MIDDLEWARE = [
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+    ]
+    TEMPLATES = [
+        {
+            'BACKEND': 'django.template.backends.django.DjangoTemplates',
+            'DIRS': '/path/to/my/templates',
+            'OPTIONS': {
+                 'debug': True,
+                 'loaders': (
+                      'django.template.loaders.filesystem.Loader',
+                      'django.template.loaders.app_directories.Loader',
+                  ),
+                 'context_processors': (
+                     'django.contrib.messages.context_processors.messages',
+                     'django.contrib.auth.context_processors.auth',
+                 )
+             }
+        },
+    ]
+    SILENCED_SYSTEM_CHECKS = (
+        'admin.E130',
+    )
+else:
+    MIDDLEWARE_CLASSES= [
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    ]
+    TEMPLATE_LOADERS = (
+        'django.template.loaders.app_directories.Loader',
+        'django.template.loaders.filesystem.Loader',
+        'django.template.loaders.eggs.Loader',
+    )
+    
+    
 
 DOMAIN = 'http://testserver'
 ROOT_URLCONF = 'softdelete.urls'

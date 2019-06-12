@@ -1,7 +1,8 @@
+import logging
+
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.conf import settings
 from django.shortcuts import render_to_response, get_object_or_404, redirect
-from django.core.urlresolvers import reverse
 from django.core import serializers
 from django.contrib import auth
 from django.contrib.auth.decorators import permission_required
@@ -11,9 +12,14 @@ from django.views.generic.base import TemplateResponseMixin, View
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.template import RequestContext
+try:
+    from django.core.urlresolvers import reverse
+except ImportError:
+    from django.urls import reverse
+
 from softdelete.forms import *
 from softdelete.models import *
-import logging
+
 
 class ProtectedView(object):
     @method_decorator(permission_required('softdelete.can_undelete'))
