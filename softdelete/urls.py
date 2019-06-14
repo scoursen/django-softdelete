@@ -22,5 +22,7 @@ if 'test' in sys.argv:
     if django.VERSION[0] >= 2:
         from django.urls import path
         urlpatterns.append(path('admin/', admin.site.urls))
+        urlpatterns.append(path('accounts/', include('django.contrib.auth.urls')))
     else:
         urlpatterns.append(url(r'^admin/', include(admin.site.urls)))
+        urlpatterns.append(url(r'^accounts/', include('django.contrib.auth.urls')))

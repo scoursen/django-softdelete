@@ -1,5 +1,8 @@
 import sys
+import os
 import django
+
+BASE_DIR = os.path.dirname(__file__)
 
 DATABASES = {
     'default': {
@@ -24,23 +27,6 @@ if django.VERSION[0] >= 2:
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
     ]
-    TEMPLATES = [
-        {
-            'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': '/path/to/my/templates',
-            'OPTIONS': {
-                 'debug': True,
-                 'loaders': (
-                      'django.template.loaders.filesystem.Loader',
-                      'django.template.loaders.app_directories.Loader',
-                  ),
-                 'context_processors': (
-                     'django.contrib.messages.context_processors.messages',
-                     'django.contrib.auth.context_processors.auth',
-                 )
-             }
-        },
-    ]
     SILENCED_SYSTEM_CHECKS = (
         'admin.E130',
     )
@@ -50,14 +36,29 @@ else:
         'django.middleware.common.CommonMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
     ]
-    TEMPLATE_LOADERS = (
-        'django.template.loaders.app_directories.Loader',
-        'django.template.loaders.filesystem.Loader',
-        'django.template.loaders.eggs.Loader',
-    )
-    
-    
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            os.path.join(BASE_DIR, 'tests/templates')
+        ],
+        'OPTIONS': {
+             'debug': True,
+             'loaders': (
+                  'django.template.loaders.filesystem.Loader',
+                  'django.template.loaders.app_directories.Loader',
+              ),
+             'context_processors': (
+                 'django.contrib.messages.context_processors.messages',
+                 'django.contrib.auth.context_processors.auth',
+             )
+         }
+    },
+]
+
 
 DOMAIN = 'http://testserver'
 ROOT_URLCONF = 'softdelete.urls'

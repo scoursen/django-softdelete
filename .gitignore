@@ -17,3 +17,9 @@ manage.py
 # WingIDE project files
 *.wpr
 *.wpu
+
+
+# TOX
+.tox
+.eggs
+

@@ -86,7 +86,7 @@ class SoftDeleteManager(models.Manager):
     def _get_self_queryset(self):
         '''
         Convenience method for grabbing the query set. Accounts for the
-        deprecation of get_query_set in Django 18.
+        deprecation of get_query_set in Django 1.8
         '''
 
         if django.VERSION >= (1, 8, 0, 'final', 0):
