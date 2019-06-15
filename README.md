@@ -1,4 +1,4 @@
-django-softdelete
+django-softdelete  [![Build Status](https://travis-ci.com/mark0978/django-softdelete.svg?branch=master)](https://travis-ci.com/mark0978/django-softdelete)
 
 Soft delete for Django ORM, with support for undelete.  Supports Django 2.0+
 
