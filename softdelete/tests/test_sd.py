@@ -146,10 +146,14 @@ class AdminTest(BaseTest):
         u.save()
         self.assertFalse(self.tmo1.deleted)
         client.login(username='test-user', password='test')
-        tmo = client.get('/admin/test_softdelete_app/testmodelone/1/')
+        url = '/admin/test_softdelete_app/testmodelone/1/'
+        tmo = client.get(url)
+        # the admin URLs changed with v1.9 change our expectation if it makes sense version wise.
+        if tmo.status_code == 302 and tmo['Location'].endswith('change/') and (1,9) <= django.VERSION:
+            url = tmo['Location']
+            tmo = client.get(url)
         self.assertEquals(tmo.status_code, 200)
-        tmo = client.post('/admin/test_softdelete_app/testmodelone/1/',
-                          {'extra_bool': '1', 'deleted': '1'})
+        tmo = client.post(url, {'extra_bool': '1', 'deleted': '1'})
         self.assertEquals(tmo.status_code, 302)
         self.tmo1 = TestModelOne.objects.get(pk=self.tmo1.pk)
         self.assertTrue(self.tmo1.deleted)
