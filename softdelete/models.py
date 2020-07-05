@@ -297,7 +297,6 @@ class ChangeSet(models.Model):
 
     content = property(get_content, set_content)
 
-@python_2_unicode_compatible
 class SoftDeleteRecord(models.Model):
     changeset = models.ForeignKey(
         ChangeSet,
