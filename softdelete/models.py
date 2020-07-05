@@ -14,7 +14,6 @@ except ImportError:
 from django.contrib.auth.models import Group, Permission
 from django.utils import timezone
 import logging
-from six import python_2_unicode_compatible
 from softdelete.signals import *
 
 try:
@@ -266,7 +265,6 @@ class SoftDeleteObject(models.Model):
             else:
                 self.delete()
 
-@python_2_unicode_compatible
 class ChangeSet(models.Model):
     created_date = models.DateTimeField(default=timezone.now)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -299,7 +297,6 @@ class ChangeSet(models.Model):
 
     content = property(get_content, set_content)
 
-@python_2_unicode_compatible
 class SoftDeleteRecord(models.Model):
     changeset = models.ForeignKey(
         ChangeSet,
