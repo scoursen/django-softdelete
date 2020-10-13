@@ -96,13 +96,15 @@ class SoftDeleteManager(models.Manager):
     def get_query_set(self):
         qs = super(SoftDeleteManager, self).get_query_set().filter(
             deleted_at__isnull=True)
-        qs.__class__ = SoftDeleteQuerySet
+        if not issubclass(qs.__class__, SoftDeleteQuerySet):
+            qs.__class__ = SoftDeleteQuerySet
         return qs
 
     def get_queryset(self):
         qs = super(SoftDeleteManager, self).get_queryset().filter(
             deleted_at__isnull=True)
-        qs.__class__ = SoftDeleteQuerySet
+        if not issubclass(qs.__class__, SoftDeleteQuerySet):
+            qs.__class__ = SoftDeleteQuerySet
         return qs
 
     def all_with_deleted(self, prt=False):
@@ -110,12 +112,14 @@ class SoftDeleteManager(models.Manager):
             qs = self._get_base_queryset().filter(**self.core_filters)
         else:
             qs = self._get_base_queryset()
-        qs.__class__ = SoftDeleteQuerySet
+        if not issubclass(qs.__class__, SoftDeleteQuerySet):
+            qs.__class__ = SoftDeleteQuerySet
         return qs
 
     def deleted_set(self):
         qs = self._get_base_queryset().filter(deleted_at__isnull=0)
-        qs.__class__ = SoftDeleteQuerySet
+        if not issubclass(qs.__class__, SoftDeleteQuerySet):
+            qs.__class__ = SoftDeleteQuerySet
         return qs
 
     def get(self, *args, **kwargs):
@@ -129,7 +133,8 @@ class SoftDeleteManager(models.Manager):
             qs = self.all_with_deleted().filter(*args, **kwargs)
         else:
             qs = self._get_self_queryset().filter(*args, **kwargs)
-        qs.__class__ = SoftDeleteQuerySet
+        if not issubclass(qs.__class__, SoftDeleteQuerySet):
+            qs.__class__ = SoftDeleteQuerySet
         return qs
 
 
