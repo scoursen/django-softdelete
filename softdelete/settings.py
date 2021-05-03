@@ -63,6 +63,7 @@ TEMPLATES = [
 DOMAIN = 'http://testserver'
 ROOT_URLCONF = 'softdelete.urls'
 SECRET_KEY = "dummy"
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 if 'test' in sys.argv:
     INSTALLED_APPS.append("softdelete.test_softdelete_app")
