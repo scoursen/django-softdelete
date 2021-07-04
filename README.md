@@ -43,8 +43,15 @@ through-the-web undelete support.
         'softdelete',
     )
 
-# How It Works
+Usage
+=====
+- Run `django-admin migrate`
+- For the models that you want __soft delete__ to be implemented in, inherit from the `SoftDeleteObject` with `from softdelete.models import SoftDeleteObject`. Something like `MyCustomModel(SoftDeleteObject, models.Model)`. This will add an extra `deleted_at` field which will appear in the admin form after deleting/undeleting the object
+- If you have a custom manager also make sure to inherit from the `SoftDeleteManager`.
+- After that you can test it by __deleting__ and __undeleting__ objects from your models. Have fun undeleting :)
 
+How It Works
+============
 
 Central to the ability to undelete a soft-deleted model is the concept of changesets.  When you
 soft-delete an object, any objects referencing it via a ForeignKey, ManyToManyField, or OneToOneField will

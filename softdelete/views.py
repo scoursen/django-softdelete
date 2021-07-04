@@ -2,7 +2,7 @@ import logging
 
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.conf import settings
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.core import serializers
 from django.contrib import auth
 from django.contrib.auth.decorators import permission_required

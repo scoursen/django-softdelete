@@ -7,7 +7,6 @@ from django.db.models import query
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
-from django.utils.encoding import python_2_unicode_compatible
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey
 except ImportError:
@@ -97,13 +96,15 @@ class SoftDeleteManager(models.Manager):
     def get_query_set(self):
         qs = super(SoftDeleteManager, self).get_query_set().filter(
             deleted_at__isnull=True)
-        qs.__class__ = SoftDeleteQuerySet
+        if not issubclass(qs.__class__, SoftDeleteQuerySet):
+            qs.__class__ = SoftDeleteQuerySet
         return qs
 
     def get_queryset(self):
         qs = super(SoftDeleteManager, self).get_queryset().filter(
             deleted_at__isnull=True)
-        qs.__class__ = SoftDeleteQuerySet
+        if not issubclass(qs.__class__, SoftDeleteQuerySet):
+            qs.__class__ = SoftDeleteQuerySet
         return qs
 
     def all_with_deleted(self, prt=False):
@@ -111,12 +112,14 @@ class SoftDeleteManager(models.Manager):
             qs = self._get_base_queryset().filter(**self.core_filters)
         else:
             qs = self._get_base_queryset()
-        qs.__class__ = SoftDeleteQuerySet
+        if not issubclass(qs.__class__, SoftDeleteQuerySet):
+            qs.__class__ = SoftDeleteQuerySet
         return qs
 
     def deleted_set(self):
         qs = self._get_base_queryset().filter(deleted_at__isnull=0)
-        qs.__class__ = SoftDeleteQuerySet
+        if not issubclass(qs.__class__, SoftDeleteQuerySet):
+            qs.__class__ = SoftDeleteQuerySet
         return qs
 
     def get(self, *args, **kwargs):
@@ -130,12 +133,16 @@ class SoftDeleteManager(models.Manager):
             qs = self.all_with_deleted().filter(*args, **kwargs)
         else:
             qs = self._get_self_queryset().filter(*args, **kwargs)
-        qs.__class__ = SoftDeleteQuerySet
+        if not issubclass(qs.__class__, SoftDeleteQuerySet):
+            qs.__class__ = SoftDeleteQuerySet
         return qs
 
 
 class SoftDeleteObject(models.Model):
-    deleted_at = models.DateTimeField(blank=True, null=True, default=None)
+    deleted_at = models.DateTimeField(
+        blank=True, null=True, default=None,
+        editable=False, db_index=True
+    )
     objects = SoftDeleteManager()
 
     class Meta:
@@ -263,7 +270,6 @@ class SoftDeleteObject(models.Model):
             else:
                 self.delete()
 
-@python_2_unicode_compatible
 class ChangeSet(models.Model):
     created_date = models.DateTimeField(default=timezone.now)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -296,7 +302,6 @@ class ChangeSet(models.Model):
 
     content = property(get_content, set_content)
 
-@python_2_unicode_compatible
 class SoftDeleteRecord(models.Model):
     changeset = models.ForeignKey(
         ChangeSet,
