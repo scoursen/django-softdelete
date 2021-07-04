@@ -1,4 +1,4 @@
-django-softdelete  [![Build Status](https://travis-ci.com/mark0978/django-softdelete.svg?branch=master)](https://travis-ci.com/mark0978/django-softdelete)
+# django-softdelete  [![Build Status](https://travis-ci.com/mark0978/django-softdelete.svg?branch=master)](https://travis-ci.com/mark0978/django-softdelete)
 
 Soft delete for Django ORM, with support for undelete.  Supports Django 2.0+
 
@@ -6,18 +6,17 @@ This project provides undelete of soft-deleted objects, along with proper undele
 
 Inspired by http://codespatter.com/2009/07/01/django-model-manager-soft-delete-how-to-customize-admin/
 
-Requirements
-============
+## Requirements
+
 
 * Django 1.8+
 * django.contrib.contenttypes
 
-Installation
-=============
+## Installation
+
     pip install django-softdelete
 
-Configuration
-=============
+## Configuration
 
 There are simple templates files in `templates/`.  You will need to add Django's
 egg loader to use the templates as is, that would look something like this:
@@ -66,8 +65,8 @@ If you are undeleting an object that was part of a ChangeSet, that entire Change
 
 Once undeleted, the ChangeSet object is removed from the underlying database with a regular ("hard") delete.
 
-Testing
-=======
+## Testing
+
 
 Can be tested directly with the following command:
 
