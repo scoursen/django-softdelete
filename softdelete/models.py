@@ -117,7 +117,7 @@ class SoftDeleteManager(models.Manager):
         return qs
 
     def deleted_set(self):
-        qs = self._get_base_queryset().filter(deleted_at__isnull=0)
+        qs = self._get_base_queryset().filter(deleted_at__isnull=False)
         if not issubclass(qs.__class__, SoftDeleteQuerySet):
             qs.__class__ = SoftDeleteQuerySet
         return qs
