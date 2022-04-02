@@ -3,10 +3,14 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.db import models
-from softdelete.test_softdelete_app.models import TestModelOne, TestModelTwo, TestModelThree, TestModelThrough
+from softdelete.test_softdelete_app.models import TestModelOne, TestModelTwoCascade, TestModelThree, TestModelThrough, \
+    TestModelTwoDoNothing, TestModelTwoSetNull
+from softdelete.tests.constanats import TEST_MODEL_ONE_COUNT, TEST_MODEL_TWO_TOTAL_COUNT, TEST_MODEL_THREE_COUNT, \
+    TEST_MODEL_TWO_LIST, TEST_MODEL_TWO_CASCADE_COUNT, TEST_MODEL_TWO_SET_NULL_COUNT, TEST_MODEL_TWO_DO_NOTHING_COUNT
 from softdelete.models import *
 from softdelete.signals import *
 import logging
+
 try:
     from django.core.urlresolvers import reverse
 except ImportError:
@@ -15,20 +19,19 @@ except ImportError:
 
 class BaseTest(TestCase):
     def setUp(self):
+        # update TEST_MODEL_ONE_COUNT constant if you initialize more or less instance of TestModelOne
         self.tmo1 = TestModelOne.objects.create(extra_bool=True)
         self.tmo2 = TestModelOne.objects.create(extra_bool=False)
-        for x in range(10):
-            if x % 2:
-                parent = self.tmo1
-            else:
-                parent = self.tmo2
-            TestModelTwo.objects.create(extra_int=x, tmo=parent)
-        for x in range(10):
-            if x % 2:
+
+        for x in range(TEST_MODEL_TWO_TOTAL_COUNT):
+            TEST_MODEL_TWO_LIST[x % len(TEST_MODEL_TWO_LIST)] \
+                .objects.create(extra_int=x, tmo=self.tmo1 if x % TEST_MODEL_ONE_COUNT else self.tmo2)
+        for x in range(TEST_MODEL_TWO_TOTAL_COUNT):
+            if x % TEST_MODEL_ONE_COUNT:
                 left_side = self.tmo1
             else:
                 left_side = self.tmo2
-            for x in range(10):
+            for x in range(TEST_MODEL_TWO_TOTAL_COUNT):
                 t3 = TestModelThree.objects.create()
                 tmt = TestModelThrough.objects.create(tmo1=left_side, tmo3=t3)
         self.user = User.objects.create_user(username='SoftdeleteUser',
@@ -51,19 +54,72 @@ class BaseTest(TestCase):
 class InitialTest(BaseTest):
 
     def test_simple_delete(self):
-        self.assertEquals(2, TestModelOne.objects.count())
-        self.assertEquals(10, TestModelTwo.objects.count())
-        self.assertEquals(2,
-                          TestModelOne.objects.all_with_deleted().count())
-        self.assertEquals(10,
-                          TestModelTwo.objects.all_with_deleted().count())
+        self.assertEquals(TEST_MODEL_ONE_COUNT, TestModelOne.objects.count())
+
+        self.assertEquals(TEST_MODEL_ONE_COUNT, TestModelOne.objects.all_with_deleted().count())
+
+        self.assertEquals(TEST_MODEL_TWO_CASCADE_COUNT, TestModelTwoCascade.objects.count())
+        self.assertEquals(TEST_MODEL_TWO_SET_NULL_COUNT, TestModelTwoSetNull.objects.count())
+        self.assertEquals(TEST_MODEL_TWO_DO_NOTHING_COUNT, TestModelTwoDoNothing.objects.count())
+
+        self.assertEquals(TEST_MODEL_TWO_CASCADE_COUNT, TestModelTwoCascade.objects.all_with_deleted().count())
+        self.assertEquals(TEST_MODEL_TWO_DO_NOTHING_COUNT, TestModelTwoDoNothing.objects.all_with_deleted().count())
+        self.assertEquals(TEST_MODEL_TWO_SET_NULL_COUNT, TestModelTwoSetNull.objects.all_with_deleted().count())
+
+        self.assertEquals(TEST_MODEL_THREE_COUNT, TestModelThree.objects.count())
+
+        self.assertEquals(TEST_MODEL_THREE_COUNT, TestModelThree.objects.all_with_deleted().count())
+
         self.tmo1.delete()
-        self.assertEquals(1, TestModelOne.objects.count())
-        self.assertEquals(5, TestModelTwo.objects.count())
-        self.assertEquals(2,
-                          TestModelOne.objects.all_with_deleted().count())
-        self.assertEquals(10,
-                          TestModelTwo.objects.all_with_deleted().count())
+
+        self.assertEquals(TEST_MODEL_ONE_COUNT - 1, TestModelOne.objects.count())
+        self.assertEquals(TEST_MODEL_ONE_COUNT, TestModelOne.objects.all_with_deleted().count())
+
+        self.assertEquals(TEST_MODEL_TWO_CASCADE_COUNT - 2, TestModelTwoCascade.objects.count())
+        self.assertEquals(TEST_MODEL_TWO_SET_NULL_COUNT, TestModelTwoSetNull.objects.count())
+        self.assertEquals(TEST_MODEL_TWO_DO_NOTHING_COUNT, TestModelTwoDoNothing.objects.count())
+
+        self.assertEquals(TEST_MODEL_TWO_CASCADE_COUNT, TestModelTwoCascade.objects.all_with_deleted().count())
+        self.assertEquals(TEST_MODEL_TWO_SET_NULL_COUNT, TestModelTwoSetNull.objects.all_with_deleted().count())
+        self.assertEquals(TEST_MODEL_TWO_DO_NOTHING_COUNT, TestModelTwoDoNothing.objects.all_with_deleted().count())
+
+        self.assertEquals(TEST_MODEL_THREE_COUNT, TestModelThree.objects.count())
+        self.assertEquals(TEST_MODEL_THREE_COUNT, TestModelThree.objects.all_with_deleted().count())
+
+    def test_simple_multi_delete(self):
+        self.assertEquals(TEST_MODEL_ONE_COUNT, TestModelOne.objects.count())
+
+        self.assertEquals(TEST_MODEL_ONE_COUNT, TestModelOne.objects.all_with_deleted().count())
+
+        self.assertEquals(TEST_MODEL_TWO_CASCADE_COUNT, TestModelTwoCascade.objects.count())
+        self.assertEquals(TEST_MODEL_TWO_SET_NULL_COUNT, TestModelTwoSetNull.objects.count())
+        self.assertEquals(TEST_MODEL_TWO_DO_NOTHING_COUNT, TestModelTwoDoNothing.objects.count())
+
+        self.assertEquals(TEST_MODEL_TWO_CASCADE_COUNT, TestModelTwoCascade.objects.all_with_deleted().count())
+        self.assertEquals(TEST_MODEL_TWO_DO_NOTHING_COUNT, TestModelTwoDoNothing.objects.all_with_deleted().count())
+        self.assertEquals(TEST_MODEL_TWO_SET_NULL_COUNT, TestModelTwoSetNull.objects.all_with_deleted().count())
+
+        self.assertEquals(TEST_MODEL_THREE_COUNT, TestModelThree.objects.count())
+
+        self.assertEquals(TEST_MODEL_THREE_COUNT, TestModelThree.objects.all_with_deleted().count())
+
+        self.tmo1.delete()
+        self.tmo2.delete()
+
+        self.assertEquals(TEST_MODEL_ONE_COUNT - 2, TestModelOne.objects.count())
+        self.assertEquals(TEST_MODEL_ONE_COUNT, TestModelOne.objects.all_with_deleted().count())
+
+        self.assertEquals(TEST_MODEL_TWO_CASCADE_COUNT - 4, TestModelTwoCascade.objects.count())
+        self.assertEquals(TEST_MODEL_TWO_SET_NULL_COUNT, TestModelTwoSetNull.objects.count())
+        self.assertEquals(TEST_MODEL_TWO_DO_NOTHING_COUNT, TestModelTwoDoNothing.objects.count())
+
+        self.assertEquals(TEST_MODEL_TWO_CASCADE_COUNT, TestModelTwoCascade.objects.all_with_deleted().count())
+        self.assertEquals(TEST_MODEL_TWO_SET_NULL_COUNT, TestModelTwoSetNull.objects.all_with_deleted().count())
+        self.assertEquals(TEST_MODEL_TWO_DO_NOTHING_COUNT, TestModelTwoDoNothing.objects.all_with_deleted().count())
+
+        self.assertEquals(TEST_MODEL_THREE_COUNT, TestModelThree.objects.count())
+        self.assertEquals(TEST_MODEL_THREE_COUNT, TestModelThree.objects.all_with_deleted().count())
+
 
 class DeleteTest(BaseTest):
     def pre_delete(self, *args, **kwargs):
@@ -87,8 +143,11 @@ class DeleteTest(BaseTest):
         models.signals.post_delete.connect(self.post_delete)
         pre_soft_delete.connect(self.pre_soft_delete)
         post_soft_delete.connect(self.post_soft_delete)
-        self.assertEquals(2, TestModelOne.objects.count())
-        self.assertEquals(10, TestModelTwo.objects.count())
+        self.assertEquals(TEST_MODEL_ONE_COUNT, TestModelOne.objects.count())
+        self.assertEquals(TEST_MODEL_TWO_CASCADE_COUNT, TestModelTwoCascade.objects.count())
+        self.assertEquals(TEST_MODEL_TWO_SET_NULL_COUNT, TestModelTwoSetNull.objects.count())
+        self.assertEquals(TEST_MODEL_TWO_DO_NOTHING_COUNT, TestModelTwoDoNothing.objects.count())
+        self.assertEquals(TEST_MODEL_THREE_COUNT, TestModelThree.objects.count())
         self.assertFalse(self.tmo1.deleted)
         self.assertFalse(self.pre_delete_called)
         self.assertFalse(self.post_delete_called)
@@ -111,16 +170,19 @@ class DeleteTest(BaseTest):
     def test_delete(self):
         self._pretest()
         self.tmo1.delete()
-        self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+56, SoftDeleteRecord.objects.count())
+        self.assertEquals(self.cs_count + 1, ChangeSet.objects.count())
+        self.assertEquals(self.rs_count + (TEST_MODEL_THREE_COUNT // 2  # half is assigned by tmo1
+                                           + TEST_MODEL_TWO_CASCADE_COUNT // 2  # half assigned to cascade model two
+                                           + 1  # tmo1 itself
+                                           ), SoftDeleteRecord.objects.count())
         self._posttest()
 
     def test_hard_delete(self):
         self._pretest()
         tmo_tmp = TestModelOne.objects.create(extra_bool=True)
         tmo_tmp.delete()
-        self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+1, SoftDeleteRecord.objects.count())
+        self.assertEquals(self.cs_count + 1, ChangeSet.objects.count())
+        self.assertEquals(self.rs_count + 1, SoftDeleteRecord.objects.count())
         tmo_tmp.delete()
         self.assertEquals(self.cs_count, ChangeSet.objects.count())
         self.assertEquals(self.rs_count, SoftDeleteRecord.objects.count())
@@ -128,13 +190,16 @@ class DeleteTest(BaseTest):
                           TestModelOne.objects.get,
                           pk=tmo_tmp.pk)
 
-
     def test_filter_delete(self):
         self._pretest()
         TestModelOne.objects.filter(pk=1).delete()
-        self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+56, SoftDeleteRecord.objects.count())
+        self.assertEquals(self.cs_count + 1, ChangeSet.objects.count())
+        self.assertEquals(self.rs_count + (TEST_MODEL_THREE_COUNT // 2  # half is assigned by tmo1
+                                           + TEST_MODEL_TWO_CASCADE_COUNT // 2  # half assigned to cascade model two
+                                           + 1  # tmo1 itself
+                                           ), SoftDeleteRecord.objects.count())
         self._posttest()
+
 
 class AdminTest(BaseTest):
     def test_admin(self):
@@ -149,7 +214,7 @@ class AdminTest(BaseTest):
         url = '/admin/test_softdelete_app/testmodelone/1/'
         tmo = client.get(url)
         # the admin URLs changed with v1.9 change our expectation if it makes sense version wise.
-        if tmo.status_code == 302 and tmo['Location'].endswith('change/') and (1,9) <= django.VERSION:
+        if tmo.status_code == 302 and tmo['Location'].endswith('change/') and (1, 9) <= django.VERSION:
             url = tmo['Location']
             tmo = client.get(url)
         self.assertEquals(tmo.status_code, 200)
@@ -157,6 +222,7 @@ class AdminTest(BaseTest):
         self.assertEquals(tmo.status_code, 302)
         self.tmo1 = TestModelOne.objects.get(pk=self.tmo1.pk)
         self.assertTrue(self.tmo1.deleted)
+
 
 class AuthorizationTest(BaseTest):
     def test_permission_needed(self):
@@ -169,6 +235,7 @@ class AuthorizationTest(BaseTest):
         self.assertEquals(rv.status_code, 302)
         rv = cl.get(reverse('softdelete.changeset.undelete', args=(1,)))
         self.assertEquals(rv.status_code, 302)
+
 
 class UndeleteTest(BaseTest):
     def pre_undelete(self, *args, **kwargs):
@@ -187,8 +254,11 @@ class UndeleteTest(BaseTest):
         self.cs_count = ChangeSet.objects.count()
         self.rs_count = SoftDeleteRecord.objects.count()
         self.tmo1.delete()
-        self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+56, SoftDeleteRecord.objects.count())
+        self.assertEquals(self.cs_count + 1, ChangeSet.objects.count())
+        self.assertEquals(self.rs_count + (TEST_MODEL_THREE_COUNT // 2  # half is assigned by tmo1
+                                           + TEST_MODEL_TWO_CASCADE_COUNT // 2  # half assigned to cascade model two
+                                           + 1  # tmo1 itself
+                                           ), SoftDeleteRecord.objects.count())
         self.tmo1 = TestModelOne.objects.get(pk=self.tmo1.pk)
         self.tmo2 = TestModelOne.objects.get(pk=self.tmo2.pk)
         self.assertTrue(self.tmo1.deleted)
@@ -204,8 +274,11 @@ class UndeleteTest(BaseTest):
         self.assertTrue(self.post_undelete_called)
 
         self.tmo1.delete()
-        self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+56, SoftDeleteRecord.objects.count())
+        self.assertEquals(self.cs_count + 1, ChangeSet.objects.count())
+        self.assertEquals(self.rs_count + (TEST_MODEL_THREE_COUNT // 2  # half is assigned by tmo1
+                                           + TEST_MODEL_TWO_CASCADE_COUNT // 2  # half assigned to cascade model two
+                                           + 1  # tmo1 itself
+                                           ), SoftDeleteRecord.objects.count())
         self.tmo1 = TestModelOne.objects.get(pk=self.tmo1.pk)
         self.tmo2 = TestModelOne.objects.get(pk=self.tmo2.pk)
         self.assertTrue(self.tmo1.deleted)
@@ -220,6 +293,7 @@ class UndeleteTest(BaseTest):
         self.assertTrue(self.pre_undelete_called)
         self.assertTrue(self.post_undelete_called)
 
+
 class M2MTests(BaseTest):
     def test_m2mdelete(self):
         t3 = TestModelThree.objects.all()[0]
@@ -233,8 +307,8 @@ class M2MTests(BaseTest):
 
 class SoftDeleteRelatedFieldLookupsTests(BaseTest):
     def test_related_foreign_key(self):
-        tmt1 = TestModelTwo.objects.create(extra_int=100, tmo=self.tmo1)
-        tmt2 = TestModelTwo.objects.create(extra_int=100, tmo=self.tmo2)
+        tmt1 = TestModelTwoCascade.objects.create(extra_int=100, tmo=self.tmo1)
+        tmt2 = TestModelTwoCascade.objects.create(extra_int=100, tmo=self.tmo2)
 
         self.assertEquals(self.tmo1.tmts.filter(extra_int=100).count(), 1)
         self.assertEquals(self.tmo1.tmts.filter(extra_int=100)[0].pk, tmt1.pk)
@@ -251,7 +325,7 @@ class SoftDeleteRelatedFieldLookupsTests(BaseTest):
 
         tmt1.delete()
         tmt1.delete()
-        self.assertRaises(TestModelTwo.DoesNotExist,
+        self.assertRaises(TestModelTwoCascade.DoesNotExist,
                           self.tmo1.tmts.get, extra_int=100)
 
     def test_related_m2m(self):

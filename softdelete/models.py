@@ -4,7 +4,7 @@ import django
 
 from django.conf import settings
 from django.db.models import query
-from django.db import models
+from django.db import models, transaction
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
 try:
@@ -191,6 +191,7 @@ class SoftDeleteObject(models.Model):
                 except:
                     getattr(self, rel).__class__.objects.all().delete()
 
+    @transaction.atomic
     def delete(self, *args, **kwargs):
         if self.deleted_at:
             logging.debug("HARD DELETEING type %s, %s", type(self), self)
@@ -233,10 +234,15 @@ class SoftDeleteObject(models.Model):
             all_related = [
                 f for f in self._meta.get_fields()
                 if (f.one_to_many or f.one_to_one)
-                and f.auto_created and not f.concrete
+                   and f.auto_created and not f.concrete
             ]
+
             for x in all_related:
-                self._do_delete(cs, x)
+                if x.on_delete.__name__ not in ['DO_NOTHING', 'SET_NULL']:
+                    self._do_delete(cs, x)
+                if x.on_delete.__name__ == 'SET_NULL':
+                    rel = x.get_accessor_name()
+                    getattr(self, rel).all().update(**{x.remote_field.name: None})
             logging.debug("FINISHED SOFT DELETING RELATED %s", self)
             models.signals.post_delete.send(sender=self.__class__,
                                             instance=self,
