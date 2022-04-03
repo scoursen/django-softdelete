@@ -6,6 +6,7 @@ from softdelete.models import *
 from softdelete.admin.forms import *
 import logging
 
+
 class SoftDeleteObjectInline(admin.TabularInline):
     class Meta:
         exclude = ('deleted_at',)
@@ -22,20 +23,31 @@ class SoftDeleteObjectInline(admin.TabularInline):
         if ordering:
             qs = qs.order_by(*ordering)
         return qs
-    
+
     queryset = get_queryset
+
 
 class SoftDeleteObjectAdmin(admin.ModelAdmin):
     form = SoftDeleteObjectAdminForm
-    actions = ['delete_selected', 'soft_undelete']
+    actions = ['delete_selected', 'soft_undelete', 'hard_delete']
 
     def delete_selected(self, request, queryset):
         queryset.delete()
+
     delete_selected.short_description = 'Soft delete selected objects'
 
     def soft_undelete(self, request, queryset):
         queryset.undelete()
+
     soft_undelete.short_description = 'Undelete selected objects'
+
+    def hard_delete(self, request, queryset):
+        for obj in queryset:
+            if obj.deleted_at:
+                obj.delete()
+            else:
+                obj.hard_delete()
+    hard_delete.short_description = 'Hard delete selected objects'
 
     def response_change(self, request, obj, *args, **kwargs):
         if 'undelete' in request.POST:
@@ -52,14 +64,16 @@ class SoftDeleteObjectAdmin(admin.ModelAdmin):
         if ordering:
             qs = qs.order_by(*ordering)
         return qs
-    
+
     queryset = get_queryset
+
 
 class SoftDeleteRecordInline(admin.TabularInline):
     model = SoftDeleteRecord
     max_num = 0
     exclude = ('content_type', 'object_id',)
     readonly_fields = ('content',)
+
 
 class SoftDeleteRecordAdmin(admin.ModelAdmin):
     model = SoftDeleteRecord
@@ -68,20 +82,22 @@ class SoftDeleteRecordAdmin(admin.ModelAdmin):
 
     def soft_undelete(self, request, queryset):
         [x.undelete() for x in queryset.all()]
+
     soft_undelete.short_description = 'Undelete selected objects'
 
     def response_change(self, request, obj, *args, **kwargs):
         if 'undelete' in request.POST:
             obj.undelete()
             return HttpResponseRedirect('../../')
-        return super(SoftDeleteRecordAdmin, self).response_change(request, obj, 
+        return super(SoftDeleteRecordAdmin, self).response_change(request, obj,
                                                                   *args, **kwargs)
 
     def has_add_permission(self, *args, **kwargs):
         return False
-    
+
     def has_delete_permission(self, *args, **kwargs):
         return False
+
 
 class ChangeSetAdmin(admin.ModelAdmin):
     model = ChangeSet
@@ -91,21 +107,22 @@ class ChangeSetAdmin(admin.ModelAdmin):
 
     def soft_undelete(self, request, queryset):
         [x.undelete() for x in queryset.all()]
+
     soft_undelete.short_description = 'Undelete selected objects'
 
     def response_change(self, request, obj, *args, **kwargs):
         if 'undelete' in request.POST:
             obj.undelete()
             return HttpResponseRedirect('../../')
-        return super(ChangeSetAdmin, self).response_change(request, obj, 
+        return super(ChangeSetAdmin, self).response_change(request, obj,
                                                            *args, **kwargs)
 
     def has_add_permission(self, *args, **kwargs):
         return False
-        
+
     def has_delete_permission(self, *args, **kwargs):
         return False
 
+
 admin.site.register(SoftDeleteRecord, SoftDeleteRecordAdmin)
 admin.site.register(ChangeSet, ChangeSetAdmin)
-

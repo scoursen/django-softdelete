@@ -191,6 +191,9 @@ class SoftDeleteObject(models.Model):
                 except:
                     getattr(self, rel).__class__.objects.all().delete()
 
+    def hard_delete(self, *args, **kwargs):
+        super(SoftDeleteObject, self).delete(*args, **kwargs)
+
     def delete(self, *args, **kwargs):
         if self.deleted_at:
             logging.debug("HARD DELETEING type %s, %s", type(self), self)
