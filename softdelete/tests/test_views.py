@@ -2,7 +2,7 @@ from django.conf import settings
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.db import models
-from softdelete.test_softdelete_app.models import TestModelOne, TestModelTwo, TestModelThree
+from softdelete.test_softdelete_app.models import TestModelOne, TestModelTwoCascade, TestModelThree
 from softdelete.models import *
 from softdelete.signals import *
 import logging
@@ -29,11 +29,12 @@ class ViewBase(TestCase):
         self.tmo1 = TestModelOne.objects.create(extra_bool=True)
         self.tmo3 = TestModelThree.objects.create(extra_int=3)
         for x in range(10):
-            TestModelTwo.objects.create(extra_int=x, tmo=self.tmo1)
+            TestModelTwoCascade.objects.create(extra_int=x, tmo=self.tmo1)
         self.tmo2 = TestModelOne.objects.create(extra_bool=False)
         for x in range(10):
-            TestModelTwo.objects.create(extra_int=x*x, tmo=self.tmo2)
+            TestModelTwoCascade.objects.create(extra_int=x * x, tmo=self.tmo2)
         self.tmo2.delete()
+
 
 class ViewTest(ViewBase):
     def __init__(self, *args, **kwargs):
@@ -83,6 +84,7 @@ class ViewTest(ViewBase):
         self.assertEquals(self.rs_count, SoftDeleteRecord.objects.count())
         self.assertEquals(self.t_count, TestModelThree.objects.count())
         self.assertEquals(0, self.tmo3.tmos.count())
+
 
 class GroupViewTest(ViewTest):
     def __init__(self, *args, **kwargs):
