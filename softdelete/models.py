@@ -192,6 +192,9 @@ class SoftDeleteObject(models.Model):
                     getattr(self, rel).__class__.objects.all().delete()
 
     @transaction.atomic
+    def hard_delete(self, *args, **kwargs):
+        super(SoftDeleteObject, self).delete(*args, **kwargs)
+
     def delete(self, *args, **kwargs):
         if self.deleted_at:
             logging.debug("HARD DELETEING type %s, %s", type(self), self)
