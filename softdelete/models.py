@@ -280,6 +280,9 @@ class SoftDeleteObject(models.Model):
                 self.delete()
 
 class ChangeSet(models.Model):
+    id = models.BigAutoField(
+        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+    )    
     created_date = models.DateTimeField(default=timezone.now)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=100)
@@ -312,6 +315,9 @@ class ChangeSet(models.Model):
     content = property(get_content, set_content)
 
 class SoftDeleteRecord(models.Model):
+    id = models.BigAutoField(
+        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+    )    
     changeset = models.ForeignKey(
         ChangeSet,
         related_name='soft_delete_records',
