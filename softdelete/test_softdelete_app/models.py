@@ -55,6 +55,29 @@ class TestModelThrough(SoftDeleteObject):
     )
 
 
+class TestModelBaseO2OMale(SoftDeleteObject):
+    name = models.CharField(max_length=16)
+
+
+class TestModelO2OFemaleSetNull(SoftDeleteObject):
+    name = models.CharField(max_length=16)
+    link = models.OneToOneField(
+        TestModelBaseO2OMale,
+        related_name='one_to_one_set_null',
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
+
+class TestModelO2OFemaleCascade(SoftDeleteObject):
+    name = models.CharField(max_length=16)
+    link = models.OneToOneField(
+        TestModelBaseO2OMale,
+        related_name='one_to_one_cascade',
+        on_delete=models.CASCADE,
+    )
+
+
 admin.site.register(TestModelOne, SoftDeleteObjectAdmin)
 admin.site.register(TestModelTwoCascade, SoftDeleteObjectAdmin)
 admin.site.register(TestModelTwoSetNull, SoftDeleteObjectAdmin)

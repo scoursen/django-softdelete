@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import django
 
 from django.conf import settings
-from django.db.models import query
+from django.db.models import query, OneToOneRel
 from django.db import models, transaction
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
@@ -245,7 +245,12 @@ class SoftDeleteObject(models.Model):
                     self._do_delete(cs, x)
                 if x.on_delete.__name__ == 'SET_NULL':
                     rel = x.get_accessor_name()
-                    getattr(self, rel).all().update(**{x.remote_field.name: None})
+                    if isinstance(x, OneToOneRel):
+                        if not getattr(self, rel, None):
+                            continue
+                        setattr(getattr(self, rel), x.remote_field.name, None)
+                    else:
+                        getattr(self, rel).all().update(**{x.remote_field.name: None})
             logging.debug("FINISHED SOFT DELETING RELATED %s", self)
             models.signals.post_delete.send(sender=self.__class__,
                                             instance=self,
