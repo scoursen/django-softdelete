@@ -4,7 +4,7 @@ from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.db import models
 from softdelete.test_softdelete_app.models import TestModelOne, TestModelTwoCascade, TestModelThree, TestModelThrough, \
-    TestModelTwoDoNothing, TestModelTwoSetNull, TestModelO2OFemaleSetNull, TestModelBaseO2OMale
+    TestModelTwoDoNothing, TestModelTwoSetNull, TestModelO2OFemaleSetNull, TestModelBaseO2OMale, TestModelO2OFemaleCascade
 from softdelete.tests.constanats import TEST_MODEL_ONE_COUNT, TEST_MODEL_TWO_TOTAL_COUNT, TEST_MODEL_THREE_COUNT, \
     TEST_MODEL_TWO_LIST, TEST_MODEL_TWO_CASCADE_COUNT, TEST_MODEL_TWO_SET_NULL_COUNT, TEST_MODEL_TWO_DO_NOTHING_COUNT
 from softdelete.models import *
@@ -359,3 +359,11 @@ class SoftDeleteRelatedFieldLookupsTests(BaseTest):
         bob.delete()
 
         self.assertEquals(alice.link_id, None)
+
+        romeo = TestModelBaseO2OMale.objects.create(name='Romeo')
+        juliet = TestModelO2OFemaleCascade.objects.create(name='Juliet', link=romeo)
+
+        romeo.delete()
+
+        self.assertRaises(TestModelO2OFemaleCascade.DoesNotExist, TestModelO2OFemaleCascade.objects.get, name='Juliet')
+        self.assertEquals(juliet.deleted, True)

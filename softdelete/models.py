@@ -246,6 +246,8 @@ class SoftDeleteObject(models.Model):
                 if x.on_delete.__name__ == 'SET_NULL':
                     rel = x.get_accessor_name()
                     if isinstance(x, OneToOneRel):
+                        if not getattr(self, rel, None):
+                            continue
                         setattr(getattr(self, rel), x.remote_field.name, None)
                     else:
                         getattr(self, rel).all().update(**{x.remote_field.name: None})
