@@ -44,6 +44,14 @@ def _determine_change_set(obj, create=True):
 
 
 class SoftDeleteQuerySet(query.QuerySet):
+    def filter(self, *args, **kwargs):
+        for k in kwargs.keys():
+            if "__" in k:
+                related_field = k.split("__")[0]
+                kwargs[related_field + "__deleted_at__isnull"] = True
+                print("added: ", kwargs[related_field + "__deleted_at__isnull"])
+        return super(SoftDeleteQuerySet, self).filter(*args, **kwargs)
+
     def all_with_deleted(self):
         qs = super(SoftDeleteQuerySet, self).all()
         qs.__class__ = SoftDeleteQuerySet
