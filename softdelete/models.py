@@ -45,7 +45,8 @@ def _determine_change_set(obj, create=True):
 
 class SoftDeleteQuerySet(query.QuerySet):
     def filter(self, *args, **kwargs):
-        for k in kwargs.keys():
+        keys = kwargs.keys()
+        for k in keys:
             if "__" in k:
                 related_field = k.split("__")[0]
                 kwargs[related_field + "__deleted_at__isnull"] = True
