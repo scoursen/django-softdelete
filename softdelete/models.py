@@ -46,7 +46,7 @@ def _determine_change_set(obj, create=True):
 
 class SoftDeleteQuerySet(query.QuerySet):
     def filter(self, *args, **kwargs):
-        keys = deepcopy(kwargs.keys())
+        keys = deepcopy(list(kwargs.keys()))
         for k in keys:
             if "__" in k:
                 related_field = k.split("__")[0]
