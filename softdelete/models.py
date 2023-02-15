@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from copy import deepcopy
 
 import django
 
@@ -45,7 +46,7 @@ def _determine_change_set(obj, create=True):
 
 class SoftDeleteQuerySet(query.QuerySet):
     def filter(self, *args, **kwargs):
-        keys = kwargs.keys()
+        keys = deepcopy(kwargs.keys())
         for k in keys:
             if "__" in k:
                 related_field = k.split("__")[0]
