@@ -50,8 +50,14 @@ class SoftDeleteQuerySet(query.QuerySet):
         for k in keys:
             if "__" in k:
                 related_field = k.split("__")[0]
-                kwargs[related_field + "__deleted_at__isnull"] = True
-                print("added: ", kwargs[related_field + "__deleted_at__isnull"])
+                print('related field: ', related_field)
+                try:
+                    related_model = self.model._meta.get_field(related_field + "__deleted_at")
+                    if related_model:
+                        kwargs[related_field + "__deleted_at__isnull"] = True
+                        print("added: ", kwargs[related_field + "__deleted_at__isnull"])
+                except:
+                    pass
         return super(SoftDeleteQuerySet, self).filter(*args, **kwargs)
 
     def all_with_deleted(self):
