@@ -183,7 +183,10 @@ class SoftDeleteObject(models.Model):
                 getattr(self, rel).all().delete(changeset=changeset)
         except:
             try:
-                getattr(self, rel).all().delete()
+                if related.one_to_one:
+                    getattr(self, rel).delete()
+                else:
+                    getattr(self, rel).all().delete()
             except Exception as e:
                 if getattr(settings, "SOFTDELETE_CASCADE_ALLOW_DELETE_ALL", True):
                     # fallback to delete all objects in the related field's model class

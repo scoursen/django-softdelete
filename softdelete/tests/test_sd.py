@@ -14,6 +14,7 @@ from softdelete.test_softdelete_app.models import (
     TestModelO2OFemaleSetNull,
     TestModelBaseO2OMale,
     TestModelO2OFemaleCascade,
+    TestModelO2OFemaleCascadeNoSD,
     TestModelO2OFemaleCascadeErrorOnDelete,
 )
 from softdelete.tests.constanats import TEST_MODEL_ONE_COUNT, TEST_MODEL_TWO_TOTAL_COUNT, TEST_MODEL_THREE_COUNT, \
@@ -403,6 +404,16 @@ class SoftDeleteRelatedFieldLookupsTests(BaseTest):
 
         self.assertRaises(TestModelO2OFemaleCascade.DoesNotExist, TestModelO2OFemaleCascade.objects.get, name='Juliet')
         self.assertEquals(juliet.deleted, True)
+
+        kurt = TestModelBaseO2OMale.objects.create(name='Kurt')
+        courtney = TestModelO2OFemaleCascadeNoSD.objects.create(name='Courtney', link=kurt)
+        jack = TestModelBaseO2OMale.objects.create(name='Jack')
+        jill = TestModelO2OFemaleCascadeNoSD.objects.create(name='jill', link=jack)
+
+        kurt.delete()
+
+        self.assertTrue(TestModelO2OFemaleCascadeNoSD.objects.filter(id=jill.id).exists())
+        self.assertFalse(TestModelO2OFemaleCascadeNoSD.objects.filter(id=courtney.id).exists())
 
     @override_settings(SOFTDELETE_CASCADE_ALLOW_DELETE_ALL=True)
     def test_fallback_delete_all_setting_false(self):
