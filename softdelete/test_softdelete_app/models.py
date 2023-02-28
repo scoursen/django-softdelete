@@ -89,6 +89,15 @@ class TestModelO2OFemaleCascade(SoftDeleteObject):
     )
 
 
+class TestModelO2OFemaleCascadeNoSD(models.Model):
+    name = models.CharField(max_length=16)
+    link = models.OneToOneField(
+        TestModelBaseO2OMale,
+        related_name='one_to_one_cascade_no_sd',
+        on_delete=models.CASCADE
+    )
+
+
 admin.site.register(TestModelOne, SoftDeleteObjectAdmin)
 admin.site.register(TestModelTwoCascade, SoftDeleteObjectAdmin)
 admin.site.register(TestModelTwoSetNull, SoftDeleteObjectAdmin)
