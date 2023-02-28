@@ -3,8 +3,18 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.db import models
-from softdelete.test_softdelete_app.models import TestModelOne, TestModelTwoCascade, TestModelThree, TestModelThrough, \
-    TestModelTwoDoNothing, TestModelTwoSetNull, TestModelO2OFemaleSetNull, TestModelBaseO2OMale, TestModelO2OFemaleCascade
+from softdelete.test_softdelete_app.models import (
+    TestModelOne,
+    TestModelTwoCascade,
+    TestModelThree,
+    TestModelThrough,
+    TestModelTwoDoNothing,
+    TestModelTwoSetNull,
+    TestModelTwoSetNullOneToOne,
+    TestModelO2OFemaleSetNull,
+    TestModelBaseO2OMale,
+    TestModelO2OFemaleCascade,
+)
 from softdelete.tests.constanats import TEST_MODEL_ONE_COUNT, TEST_MODEL_TWO_TOTAL_COUNT, TEST_MODEL_THREE_COUNT, \
     TEST_MODEL_TWO_LIST, TEST_MODEL_TWO_CASCADE_COUNT, TEST_MODEL_TWO_SET_NULL_COUNT, TEST_MODEL_TWO_DO_NOTHING_COUNT
 from softdelete.models import *
@@ -199,6 +209,31 @@ class DeleteTest(BaseTest):
                                            + 1  # tmo1 itself
                                            ), SoftDeleteRecord.objects.count())
         self._posttest()
+
+    def test_set_null_on_one_to_one(self):
+        """
+        Make sure reverse `OneToOne` fields are set to `None` upon soft delete.
+
+        When an instance is soft deleted and other instances have a `OneToOne`
+        relation to this instance with `on_delete=SET_NULL`, the other
+        instances should have their relation set to `None`.
+        """
+        # Create two instances, one with a relation to the other.
+        to_be_deleted = TestModelOne.objects.create()
+        other_with_relation = TestModelTwoSetNullOneToOne.objects.create(
+            tmo=to_be_deleted,
+            extra_int=0,
+        )
+
+        # Make sure the relation is there before soft deleting.
+        self.assertEqual(other_with_relation.tmo, to_be_deleted)
+
+        # Then delete the instance and expect the relation from the other
+        # instance is now `None`.
+        to_be_deleted.delete()
+        other_with_relation.refresh_from_db()
+        self.assertIsNone(other_with_relation.tmo)
+
 
 
 class AdminTest(BaseTest):
