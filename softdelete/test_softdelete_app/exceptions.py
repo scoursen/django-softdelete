@@ -1,0 +1,2 @@
+class ModelDeletionException(Exception):
+    pass

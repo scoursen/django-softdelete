@@ -1,7 +1,10 @@
 from django.db import models
 from django.contrib import admin
+from django.db.models import QuerySet
+
 from softdelete.models import *
 from softdelete.admin import *
+from softdelete.test_softdelete_app.exceptions import ModelDeletionException
 
 
 class TestModelOne(SoftDeleteObject):
@@ -76,6 +79,18 @@ class TestModelO2OFemaleCascade(SoftDeleteObject):
         related_name='one_to_one_cascade',
         on_delete=models.CASCADE,
     )
+
+
+class TestModelO2OFemaleCascadeErrorOnDelete(models.Model):
+    name = models.CharField(max_length=16)
+    link = models.OneToOneField(
+        TestModelBaseO2OMale,
+        related_name='one_to_one_cascade_error_on_delete',
+        on_delete=models.CASCADE,
+    )
+
+    def delete(self, using=None, keep_parents=False):
+        raise ModelDeletionException("Preventing deletion!")
 
 
 admin.site.register(TestModelOne, SoftDeleteObjectAdmin)

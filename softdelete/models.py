@@ -184,12 +184,17 @@ class SoftDeleteObject(models.Model):
         except:
             try:
                 getattr(self, rel).all().delete()
-            except:
-                try:
-                    getattr(self, rel).__class__.objects.all().delete(
-                        changeset=changeset)
-                except:
-                    getattr(self, rel).__class__.objects.all().delete()
+            except Exception as e:
+                if getattr(settings, "SOFTDELETE_CASCADE_ALLOW_DELETE_ALL", True):
+                    # fallback to delete all objects in the related field's model class
+                    # to maintain previous behaviour (before setting was added)
+                    try:
+                        getattr(self, rel).__class__.objects.all().delete(
+                            changeset=changeset)
+                    except:
+                        getattr(self, rel).__class__.objects.all().delete()
+                else:
+                    raise e
 
     @transaction.atomic
     def hard_delete(self, *args, **kwargs):
@@ -287,7 +292,7 @@ class SoftDeleteObject(models.Model):
 class ChangeSet(models.Model):
     id = models.BigAutoField(
         auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-    )    
+    )
     created_date = models.DateTimeField(default=timezone.now)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=100)
@@ -322,7 +327,7 @@ class ChangeSet(models.Model):
 class SoftDeleteRecord(models.Model):
     id = models.BigAutoField(
         auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
-    )    
+    )
     changeset = models.ForeignKey(
         ChangeSet,
         related_name='soft_delete_records',

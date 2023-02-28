@@ -50,6 +50,13 @@ Usage
 - If you have a custom manager also make sure to inherit from the `SoftDeleteManager`.
 - After that you can test it by __deleting__ and __undeleting__ objects from your models. Have fun undeleting :)
 
+Settings
+========
+
+|Name|Default| Description                                                                                                                                                                 |
+|---|---|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|`SOFTDELETE_CASCADE_ALLOW_DELETE_ALL`|True| Setting to confirm if the logic for deleting related entities should fall back to deleting all model entities in the event of an exception being raised when calling delete |
+
 How It Works
 ============
 
@@ -64,6 +71,13 @@ undelete.
 If you are undeleting an object that was part of a ChangeSet, that entire ChangeSet is undeleted.
 
 Once undeleted, the ChangeSet object is removed from the underlying database with a regular ("hard") delete.
+
+Warnings
+=====
+
+When using cascade delete, the default behaviour when the call to delete a related object raises an exception is 
+to fallback to deleting all the entities for that model class from the database. You can prevent this behaviour
+by using the `SOFTDELETE_CASCADE_ALLOW_DELETE_ALL` setting. Set this to `False` to prevent the behaviour.
 
 ## Testing
 

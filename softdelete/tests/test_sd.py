@@ -1,10 +1,13 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.contrib.auth.models import User
 from django.db import models
+
+from softdelete.test_softdelete_app.exceptions import ModelDeletionException
 from softdelete.test_softdelete_app.models import TestModelOne, TestModelTwoCascade, TestModelThree, TestModelThrough, \
-    TestModelTwoDoNothing, TestModelTwoSetNull, TestModelO2OFemaleSetNull, TestModelBaseO2OMale, TestModelO2OFemaleCascade
+    TestModelTwoDoNothing, TestModelTwoSetNull, TestModelO2OFemaleSetNull, TestModelBaseO2OMale, \
+    TestModelO2OFemaleCascade, TestModelO2OFemaleCascadeErrorOnDelete
 from softdelete.tests.constanats import TEST_MODEL_ONE_COUNT, TEST_MODEL_TWO_TOTAL_COUNT, TEST_MODEL_THREE_COUNT, \
     TEST_MODEL_TWO_LIST, TEST_MODEL_TWO_CASCADE_COUNT, TEST_MODEL_TWO_SET_NULL_COUNT, TEST_MODEL_TWO_DO_NOTHING_COUNT
 from softdelete.models import *
@@ -367,3 +370,25 @@ class SoftDeleteRelatedFieldLookupsTests(BaseTest):
 
         self.assertRaises(TestModelO2OFemaleCascade.DoesNotExist, TestModelO2OFemaleCascade.objects.get, name='Juliet')
         self.assertEquals(juliet.deleted, True)
+
+    @override_settings(SOFTDELETE_CASCADE_ALLOW_DELETE_ALL=True)
+    def test_fallback_delete_all_setting_false(self):
+        bob = TestModelBaseO2OMale.objects.create(name='Bob')
+        TestModelO2OFemaleCascadeErrorOnDelete.objects.create(name='Alice', link=bob)
+
+        romeo = TestModelBaseO2OMale.objects.create(name='Romeo')
+        TestModelO2OFemaleCascadeErrorOnDelete.objects.create(name='Juliet', link=romeo)
+
+        self.assertFalse(TestModelO2OFemaleCascadeErrorOnDelete.objects.all().exists())
+
+    @override_settings(SOFTDELETE_CASCADE_ALLOW_DELETE_ALL=False)
+    def test_fallback_delete_all_setting_false(self):
+        bob = TestModelBaseO2OMale.objects.create(name='Bob')
+        alice = TestModelO2OFemaleCascadeErrorOnDelete.objects.create(name='Alice', link=bob)
+
+        romeo = TestModelBaseO2OMale.objects.create(name='Romeo')
+        TestModelO2OFemaleCascadeErrorOnDelete.objects.create(name='Juliet', link=romeo)
+
+        self.assertRaises(ModelDeletionException, alice.delete)
+        self.assertTrue(TestModelO2OFemaleCascadeErrorOnDelete.objects.filter(id=alice.id).exists())
+        self.assertEquals(TestModelO2OFemaleCascadeErrorOnDelete.objects.count(), 2)
