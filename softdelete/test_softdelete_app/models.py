@@ -40,6 +40,17 @@ class TestModelTwoSetNull(SoftDeleteObject):
     )
 
 
+class TestModelTwoSetNullOneToOne(SoftDeleteObject):
+    extra_int = models.IntegerField()
+    tmo = models.OneToOneField(
+        TestModelOne,
+        on_delete=models.SET_NULL,
+        related_name='tmsno',
+        null=True,
+        blank=True
+    )
+
+
 class TestModelThree(SoftDeleteObject):
     tmos = models.ManyToManyField(TestModelOne, through='TestModelThrough')
     extra_int = models.IntegerField(blank=True, null=True)

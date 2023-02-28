@@ -249,13 +249,16 @@ class SoftDeleteObject(models.Model):
                 if x.on_delete.__name__ not in ['DO_NOTHING', 'SET_NULL']:
                     self._do_delete(cs, x)
                 if x.on_delete.__name__ == 'SET_NULL':
-                    rel = x.get_accessor_name()
+                    related_name = x.get_accessor_name()
                     if isinstance(x, OneToOneRel):
-                        if not getattr(self, rel, None):
+                        if getattr(self, related_name, None) is None:
                             continue
-                        setattr(getattr(self, rel), x.remote_field.name, None)
+                        related = getattr(self, related_name)
+                        if isinstance(related, models.Model):
+                            setattr(related, x.remote_field.name, None)
+                            related.save(update_fields=[x.remote_field.name])
                     else:
-                        getattr(self, rel).all().update(**{x.remote_field.name: None})
+                        getattr(self, related_name).all().update(**{x.remote_field.name: None})
             logging.debug("FINISHED SOFT DELETING RELATED %s", self)
             models.signals.post_delete.send(sender=self.__class__,
                                             instance=self,
