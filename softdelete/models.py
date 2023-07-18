@@ -227,7 +227,7 @@ class SoftDeleteObject(models.Model):
                 except:
                     pass
         else:
-            using = kwargs.get('using', settings.DATABASES['default'])
+            using = kwargs.get('using', 'default')
             models.signals.pre_delete.send(sender=self.__class__,
                                            instance=self,
                                            using=using)
