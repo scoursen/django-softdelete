@@ -305,8 +305,8 @@ class ChangeSet(models.Model):
     record = GenericForeignKey('content_type', 'object_id')
 
     class Meta:
-        index_together = [
-            ("content_type", "object_id"),
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
         ]
 
     def get_content(self):
@@ -346,8 +346,8 @@ class SoftDeleteRecord(models.Model):
 
     class Meta:
         unique_together = (('changeset', 'content_type', 'object_id'),)
-        index_together = [
-            ("content_type", "object_id"),
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
         ]
 
     def get_content(self):
