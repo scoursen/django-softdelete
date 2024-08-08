@@ -1,0 +1,16 @@
+[project]
+name = "django-softdelete"
+version = "0.9.5"
+description = "Soft delete support for Django ORM, with undelete."
+readme = {file = "README.txt", content-type = "text/markdown"}
+authors = [
+	{name = "Steve Coursen", email = "smcoursen@gmail.com"},
+]
+classifiers = [
+	"Environment :: Web Environment",
+	"Framework :: Django",
+	"License :: OSI Approved :: BSD License",
+]
+
+[project.urls]
+Homepage = "https://github.com/scoursen/django-softdelete"
