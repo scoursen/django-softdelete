@@ -1,6 +1,6 @@
 [project]
 name = "django-softdelete"
-version = "0.11.3"
+version = "0.11.4"
 description = "Soft delete support for Django ORM, with undelete."
 readme = {file = "README.txt", content-type = "text/markdown"}
 authors = [
