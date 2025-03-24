@@ -3,6 +3,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase, Client, override_settings
 from django.contrib.auth.models import User
 from django.db import models
+from django.contrib.contenttypes.models import ContentType
+from softdelete.test_softdelete_app.exceptions import ModelDeletionException
 from softdelete.test_softdelete_app.models import (
     TestModelOne,
     TestModelTwoCascade,
@@ -16,6 +18,8 @@ from softdelete.test_softdelete_app.models import (
     TestModelO2OFemaleCascade,
     TestModelO2OFemaleCascadeNoSD,
     TestModelO2OFemaleCascadeErrorOnDelete,
+    TestGenericRelation,
+    TestGenericForeignKey,
 )
 from softdelete.tests.constanats import TEST_MODEL_ONE_COUNT, TEST_MODEL_TWO_TOTAL_COUNT, TEST_MODEL_THREE_COUNT, \
     TEST_MODEL_TWO_LIST, TEST_MODEL_TWO_CASCADE_COUNT, TEST_MODEL_TWO_SET_NULL_COUNT, TEST_MODEL_TWO_DO_NOTHING_COUNT
@@ -236,6 +240,17 @@ class DeleteTest(BaseTest):
         other_with_relation.refresh_from_db()
         self.assertIsNone(other_with_relation.tmo)
 
+    def test_delete_generic_relation(self):
+        test_generic_relation = TestGenericRelation.objects.create()
+        test_generic_foreign_key = TestGenericForeignKey.objects.create(
+            content_type=ContentType.objects.get_for_model(TestGenericRelation),
+            object_id=test_generic_relation.pk,
+        )
+        test_generic_relation.delete()
+        test_generic_foreign_key.refresh_from_db()
+        test_generic_relation.refresh_from_db()
+        self.assertIsNotNone(test_generic_relation.deleted_at)
+        self.assertIsNotNone(test_generic_foreign_key.deleted_at)
 
 
 class AdminTest(BaseTest):
