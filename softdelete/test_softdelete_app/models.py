@@ -5,10 +5,23 @@ from django.db.models import QuerySet
 from softdelete.models import *
 from softdelete.admin import *
 from softdelete.test_softdelete_app.exceptions import ModelDeletionException
+from django.contrib.contenttypes.models import ContentType
+try:
+    from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
+except ImportError:
+    from django.contrib.contenttypes.generic import GenericRelation, GenericForeignKey
 
 
 class TestModelOne(SoftDeleteObject):
     extra_bool = models.BooleanField(default=False)
+
+class TestGenericForeignKey(SoftDeleteObject):
+    content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True)
+    object_id = models.CharField(max_length=255, null=True)
+    generic_relation = GenericForeignKey("content_type", "object_id")
+
+class TestGenericRelation(SoftDeleteObject):
+    generic_relations = GenericRelation("ProjectRiskModel")
 
 
 class TestModelTwoCascade(SoftDeleteObject):

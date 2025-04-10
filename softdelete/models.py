@@ -247,6 +247,21 @@ class SoftDeleteObject(models.Model):
                 if (f.one_to_many or f.one_to_one)
                    and f.auto_created and not f.concrete
             ]
+            
+            all_generic_relations = [
+                f
+                for f in self._meta.get_fields()
+                if (f.one_to_many or f.one_to_one)
+                and hasattr(f, "reverse_related_fields")
+                and not f.concrete
+            ]
+
+            for generic_relation in all_generic_relations:
+                related_objects = generic_relation.bulk_related_objects(
+                    [self], using=using
+                )
+                for related_object in related_objects:
+                    related_object.delete()
 
             for x in all_related:
                 if x.on_delete.__name__ not in ['DO_NOTHING', 'SET_NULL']:
