@@ -21,7 +21,7 @@ class TestGenericForeignKey(SoftDeleteObject):
     generic_relation = GenericForeignKey("content_type", "object_id")
 
 class TestGenericRelation(SoftDeleteObject):
-    generic_relations = GenericRelation("ProjectRiskModel")
+    generic_relations = GenericRelation("TestGenericForeignKey")
 
 
 class TestModelTwoCascade(SoftDeleteObject):

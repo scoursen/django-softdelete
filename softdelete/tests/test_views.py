@@ -58,7 +58,7 @@ class ViewTest(ViewBase):
             cli2 = Client()
             rv = cli2.get(view_name)
             # Make sure we redirected to a login page
-            self.assertEquals(rv.status_code, 302)
+            self.assertEqual(rv.status_code, 302)
             self.assertIn(reverse('login'), rv['Location'])
             # But don't try to render it.
 
@@ -67,23 +67,23 @@ class ViewTest(ViewBase):
         self.rs_count = SoftDeleteRecord.objects.count()
         self.t_count = TestModelThree.objects.count()
         self.tmo3.delete()
-        self.assertEquals(self.t_count-1, TestModelThree.objects.count())
-        self.assertEquals(0, self.tmo3.tmos.count())
-        self.assertEquals(self.cs_count+1, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count+1, SoftDeleteRecord.objects.count())
+        self.assertEqual(self.t_count-1, TestModelThree.objects.count())
+        self.assertEqual(0, self.tmo3.tmos.count())
+        self.assertEqual(self.cs_count+1, ChangeSet.objects.count())
+        self.assertEqual(self.rs_count+1, SoftDeleteRecord.objects.count())
         rv = self.client.get(reverse("softdelete.changeset.undelete",
                                      args=(ChangeSet.objects.latest("created_date").pk,)))
-        self.assertEquals(rv.status_code,200)
+        self.assertEqual(rv.status_code,200)
         rv = self.client.post(reverse("softdelete.changeset.undelete",
                                      args=(ChangeSet.objects.latest("created_date").pk,)),
                              {'action': 'Undelete'})
-        self.assertEquals(rv.status_code, 302)
+        self.assertEqual(rv.status_code, 302)
         rv = self.client.get(rv['Location'])
-        self.assertEquals(rv.status_code, 200)
-        self.assertEquals(self.cs_count, ChangeSet.objects.count())
-        self.assertEquals(self.rs_count, SoftDeleteRecord.objects.count())
-        self.assertEquals(self.t_count, TestModelThree.objects.count())
-        self.assertEquals(0, self.tmo3.tmos.count())
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(self.cs_count, ChangeSet.objects.count())
+        self.assertEqual(self.rs_count, SoftDeleteRecord.objects.count())
+        self.assertEqual(self.t_count, TestModelThree.objects.count())
+        self.assertEqual(0, self.tmo3.tmos.count())
 
 
 class GroupViewTest(ViewTest):
