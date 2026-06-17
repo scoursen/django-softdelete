@@ -21,8 +21,15 @@ from softdelete.test_softdelete_app.models import (
     TestGenericRelation,
     TestGenericForeignKey,
 )
-from softdelete.tests.constanats import TEST_MODEL_ONE_COUNT, TEST_MODEL_TWO_TOTAL_COUNT, TEST_MODEL_THREE_COUNT, \
-    TEST_MODEL_TWO_LIST, TEST_MODEL_TWO_CASCADE_COUNT, TEST_MODEL_TWO_SET_NULL_COUNT, TEST_MODEL_TWO_DO_NOTHING_COUNT
+from softdelete.tests.constants import (
+    TEST_MODEL_ONE_COUNT,
+    TEST_MODEL_TWO_TOTAL_COUNT,
+    TEST_MODEL_THREE_COUNT,
+    TEST_MODEL_TWO_LIST,
+    TEST_MODEL_TWO_CASCADE_COUNT,
+    TEST_MODEL_TWO_SET_NULL_COUNT,
+    TEST_MODEL_TWO_DO_NOTHING_COUNT,
+)
 from softdelete.models import *
 from softdelete.signals import *
 import logging
