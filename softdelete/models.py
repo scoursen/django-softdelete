@@ -247,7 +247,7 @@ class SoftDeleteObject(models.Model):
                 if (f.one_to_many or f.one_to_one)
                    and f.auto_created and not f.concrete
             ]
-            
+
             all_generic_relations = [
                 f
                 for f in self._meta.get_fields()
@@ -264,8 +264,6 @@ class SoftDeleteObject(models.Model):
                     related_object.delete()
 
             for x in all_related:
-                if x.on_delete.__name__ not in ['DO_NOTHING', 'SET_NULL']:
-                    self._do_delete(cs, x)
                 if x.on_delete.__name__ == 'SET_NULL':
                     related_name = x.get_accessor_name()
                     if isinstance(x, OneToOneRel):
@@ -277,6 +275,24 @@ class SoftDeleteObject(models.Model):
                             related.save(update_fields=[x.remote_field.name])
                     else:
                         getattr(self, related_name).all().update(**{x.remote_field.name: None})
+                elif x.on_delete.__name__ == "PROTECT":
+                    related_name = x.get_accessor_name()
+                    if isinstance(x, OneToOneRel):
+                        related_object = getattr(self, related_name, None)
+                        related_objects = [related_object] if related_object else None
+                    else:
+                        related_objects = list(getattr(self, related_name).all())
+
+                    if related_objects:
+                        models.PROTECT(
+                            collector=None,
+                            field=x.field,
+                            sub_objs=related_objects,
+                            using=using,
+                        )
+                elif x.on_delete.__name__ != 'DO_NOTHING':
+                    self._do_delete(cs, x)
+
             logging.debug("FINISHED SOFT DELETING RELATED %s", self)
             models.signals.post_delete.send(sender=self.__class__,
                                             instance=self,

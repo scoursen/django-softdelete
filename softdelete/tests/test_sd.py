@@ -12,6 +12,8 @@ from softdelete.test_softdelete_app.models import (
     TestModelThrough,
     TestModelTwoDoNothing,
     TestModelTwoSetNull,
+    TestModelTwoProtectForeignKey,
+    TestModelTwoProtectOneToOne,
     TestModelTwoSetNullOneToOne,
     TestModelO2OFemaleSetNull,
     TestModelBaseO2OMale,
@@ -21,8 +23,15 @@ from softdelete.test_softdelete_app.models import (
     TestGenericRelation,
     TestGenericForeignKey,
 )
-from softdelete.tests.constanats import TEST_MODEL_ONE_COUNT, TEST_MODEL_TWO_TOTAL_COUNT, TEST_MODEL_THREE_COUNT, \
-    TEST_MODEL_TWO_LIST, TEST_MODEL_TWO_CASCADE_COUNT, TEST_MODEL_TWO_SET_NULL_COUNT, TEST_MODEL_TWO_DO_NOTHING_COUNT
+from softdelete.tests.constants import (
+    TEST_MODEL_ONE_COUNT,
+    TEST_MODEL_TWO_TOTAL_COUNT,
+    TEST_MODEL_THREE_COUNT,
+    TEST_MODEL_TWO_LIST,
+    TEST_MODEL_TWO_CASCADE_COUNT,
+    TEST_MODEL_TWO_SET_NULL_COUNT,
+    TEST_MODEL_TWO_DO_NOTHING_COUNT,
+)
 from softdelete.models import *
 from softdelete.signals import *
 import logging
@@ -251,6 +260,27 @@ class DeleteTest(BaseTest):
         test_generic_relation.refresh_from_db()
         self.assertIsNotNone(test_generic_relation.deleted_at)
         self.assertIsNotNone(test_generic_foreign_key.deleted_at)
+
+    def test_on_delete_protect_foreign_key(self):
+        """Make sure protected foreign key relations can't be deleted."""
+        related = TestModelOne.objects.create()
+        protecting_related = TestModelTwoProtectForeignKey.objects.create(
+            tmo=related,
+        )
+
+        with self.assertRaises(models.ProtectedError):
+            related.delete()
+
+    def test_on_delete_protect_one_to_one(self):
+        """Make sure protected one-to-one relations can't be deleted."""
+        related = TestModelOne.objects.create()
+        protecting_related = TestModelTwoProtectOneToOne.objects.create(
+            tmo=related,
+        )
+
+        with self.assertRaises(models.ProtectedError):
+            related.delete()
+
 
 
 class AdminTest(BaseTest):

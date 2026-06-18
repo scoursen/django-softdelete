@@ -64,6 +64,26 @@ class TestModelTwoSetNullOneToOne(SoftDeleteObject):
     )
 
 
+class TestModelTwoProtectForeignKey(SoftDeleteObject):
+    tmo = models.ForeignKey(
+        TestModelOne,
+        on_delete=models.PROTECT,
+        related_name='protect_foreign_key',
+        null=True,
+        blank=True
+    )
+
+
+class TestModelTwoProtectOneToOne(SoftDeleteObject):
+    tmo = models.OneToOneField(
+        TestModelOne,
+        on_delete=models.PROTECT,
+        related_name='protect_one_to_one',
+        null=True,
+        blank=True
+    )
+
+
 class TestModelThree(SoftDeleteObject):
     tmos = models.ManyToManyField(TestModelOne, through='TestModelThrough')
     extra_int = models.IntegerField(blank=True, null=True)
